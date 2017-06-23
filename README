@@ -1,0 +1,20 @@
+My hash library for C
+
+One of my projects during Winter Break 2017
+
+Initial goals (Priority):
+
+1. Highly optimised (matching performance of other libs and compare vs Python/Java)
+    - Performance measure based on time, accuracy, distribution of collision, etc.
+2. Allow for customisation
+    - Enable user to select open addr, collision chaining, type of key, load factor 
+3. Create diagnostic tools to allow analysis
+    - Can view current state of hashes, % of collisions, current load factor, longest chain, etc. 
+      in a meaningful way
+      
+Things to learn
+
+- Variadic functions (allow for variable amount of args)
+- Highly optimised hash algorithms (to the very fine details)
+- Learn more about hashtable implementations (have never done open addr)
+- Learn about pytest for my upcoming internship and unit test extensively and try to incorporate professional practices
