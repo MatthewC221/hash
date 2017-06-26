@@ -1,4 +1,0 @@
-26/6/17
-- Basic functions added: createNode, nextPrime, isPrime, etc. (helper functions). 
-- Important functionality added = free_hash, put, delete_key, print_hash
-- Next: create unit tests for current functions, add get (look up)
