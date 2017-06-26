@@ -53,7 +53,7 @@ Hash * createHash(int starting_size)
     printf("%sHash%s created: init size = %s%d%s\n", RED, END, GREEN, starting_size, END);
     
     Hash * new_hash = malloc(sizeof(struct Hash));
-    new_hash->K = malloc(sizeof(starting_size) * sizeof(struct int_node));
+    new_hash->K = malloc(starting_size * sizeof(struct int_node));
     new_hash->cur_size = starting_size;
     
     for (int i = 0; i < starting_size; i++) {
@@ -140,17 +140,22 @@ void printHash (Hash * H)
 
 void free_hash (Hash * H) 
 {
+
+    printf("Deleting 0->%d\n", H->cur_size);
     for (int i = 0; i < H->cur_size; i++) {
         int_node *del = H->K[i];
+        
         while (del != NULL) {
             int_node *tmp = del;
             del = del->next;
             free(tmp);
         }
-        free(H->K[i]);
+        
         H->K[i] = NULL;
     }
+    // H->K = NULL;
     free(H->K);
+    H->K = NULL;
     free(H);
 }
 
@@ -213,9 +218,12 @@ void free_node(Hash * H, int key)
 //** Creates a node
 int_node * createNode(int cur_key, int cur_value)
 {
-    int_node * N = malloc(sizeof(int_node));
+
+    int_node * N = malloc(sizeof(struct int_node));
+
     N->k = cur_key;
     N->v = cur_value;
+    
     N->next = NULL;
     
     return N;   
