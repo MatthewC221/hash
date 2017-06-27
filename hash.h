@@ -2,6 +2,8 @@
 #include <stdlib.h>
 #include <stdbool.h>
 #include <math.h>
+#include <limits.h>
+#include <stdarg.h>
 
 #ifndef _hash_h
 #define _hash_h
@@ -9,6 +11,8 @@
 #define GREEN "\e[32m"
 #define YELLOW "\e[93m"
 #define END  "\e[0m"                // For end colours
+
+#define COLLISION 1
 
 // Allow string hash as well
 // Hash * createHash(int size);
@@ -27,6 +31,8 @@ typedef struct Hash
 {
     int_node ** K;
     int cur_size;
+    int num_elem;
+    double load_factor;
     /* Optionals
     double load factor;
     
@@ -36,11 +42,35 @@ typedef struct Hash
 
 int_node * createNode(int cur_key, int cur_value);
 
-// Incorporate type later
+/* Incorporate type later
 // Allow for open addressing/chaining option
 // ** Creates the hash
-Hash * createHash(int starting_size) 
+// @args: type = open addr vs collision, optional starting_size
+*/
+Hash * createHash(int elements, ...) 
 {
+    va_list arg_list;
+    
+    // Default size
+    int starting_size = 17;
+    
+    // Default collision
+    int type = COLLISION;               
+    
+    if (elements > 2) {
+        fprintf(stderr, "<Hash.h>: supplied too many parameters to <Hash.h>: createHash(): max 2\n");
+        return NULL;
+    }
+    
+    va_start (arg_list, elements);
+    
+    for (int i = 0; i < elements; i++) {
+        if (i == 0) {
+            starting_size = va_arg(arg_list, int);
+        } else {
+            type = va_arg(arg_list, int);
+        }
+    }   
 
     if (!starting_size) {
         fprintf(stderr, "%shash err: invalid starting_size\n"); 
@@ -55,6 +85,8 @@ Hash * createHash(int starting_size)
     Hash * new_hash = malloc(sizeof(struct Hash));
     new_hash->K = malloc(starting_size * sizeof(struct int_node));
     new_hash->cur_size = starting_size;
+    new_hash->num_elem = 0;
+    new_hash->load_factor = 0;
     
     for (int i = 0; i < starting_size; i++) {
         new_hash->K[i] = NULL;
@@ -80,6 +112,7 @@ void put (Hash * H, int cur_key, int cur_value)
     // Empty LL
     if (tmp == NULL) {
         H->K[gen_key] = new_N;
+        H->num_elem++;
         new_N->next = NULL;
     } else {
         
@@ -112,6 +145,12 @@ void put (Hash * H, int cur_key, int cur_value)
             
         // If no conflicts insert at tail
         tmp->next = new_N;
+        H->num_elem++;
+        if (H->num_elem != 0) {
+            H->load_factor = H->num_elem / H->cur_size;
+        } else {
+            H->load_factor = 0;
+        }
         new_N->next = NULL;
     }
         
@@ -136,6 +175,13 @@ void printHash (Hash * H)
         }
         printf("\n");
     }
+}
+
+double load_factor(Hash * H) 
+{
+    printf("Nodes / size = %d / %d\n", H->num_elem, H->cur_size);
+    H->load_factor = (double)H->num_elem / H->cur_size;
+    return H->load_factor;
 }
 
 void free_hash (Hash * H) 
@@ -181,10 +227,10 @@ void free_node(Hash * H, int key)
         bool exists = false;
         while (del_after->next != NULL) {       
             if (del_after->k == key) {
-                if (del_after == H->K[gen_key]) {            // Deleting the head
+                if (del_after == H->K[gen_key]) {            // Deleting the head of len = 1
                     if (del_after->next == NULL) {
                         H->K[gen_key] = NULL;
-                    } else {                    
+                    } else {                                                                    
                         H->K[gen_key] = del_after->next;
                     }
                 } else if (del_after->next != NULL) {
@@ -213,6 +259,25 @@ void free_node(Hash * H, int key)
         }
     }
 
+}
+
+int get(Hash * H, int key) 
+{
+    int gen_key = 0;
+    if (key) gen_key = key % H->cur_size;
+    
+    int_node * lookup = H->K[gen_key];
+    
+    while (lookup) {
+        if (lookup->k == key) {
+            return lookup->v;
+        }
+        lookup = lookup->next;
+    }
+    
+    // Returns here
+    fprintf(stderr, "<Hash.h>: illegal key lookup of non-existent or deleted key %d\n", key);
+    return INT_MIN;
 }
 
 //** Creates a node
