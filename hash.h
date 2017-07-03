@@ -31,16 +31,29 @@ typedef struct Hash
 {
     int_node ** K;
     int cur_size;
-    int num_elem;
-    double load_factor;
-    /* Optionals
-    double load factor;
+    int num_elem;   
     
+    // Number of elements until resize            
+    int to_resize;
     
-    */
+    // The load factor before resizing (num_elem / cur_size)
+    // Can be > 1 for large chains
+    
+    double load_factor;         
+
 } Hash;
 
+// Function decl
 int_node * createNode(int cur_key, int cur_value);
+void resize(Hash * H);
+Hash * copyHash(Hash * H);
+void free_hash(Hash * H);
+// Function decl
+
+void set_lf (Hash * H, double new_load)
+{
+    if (new_load) H->load_factor = new_load;
+}
 
 /* Incorporate type later
 // Allow for open addressing/chaining option
@@ -83,10 +96,13 @@ Hash * createHash(int elements, ...)
     printf("%sHash%s created: init size = %s%d%s\n", RED, END, GREEN, starting_size, END);
     
     Hash * new_hash = malloc(sizeof(struct Hash));
+    
     new_hash->K = malloc(starting_size * sizeof(struct int_node));
     new_hash->cur_size = starting_size;
     new_hash->num_elem = 0;
-    new_hash->load_factor = 0;
+    new_hash->load_factor = 0.75;           // Default load factor (change at 0.75 = N / size)
+    
+    new_hash->to_resize = new_hash->cur_size * new_hash->load_factor;
     
     for (int i = 0; i < starting_size; i++) {
         new_hash->K[i] = NULL;
@@ -96,6 +112,8 @@ Hash * createHash(int elements, ...)
 }
 
 //** Insert element in hash
+
+// Currently resize AFTER we insert a new node
 void put (Hash * H, int cur_key, int cur_value) 
 {
     int gen_key = 0;
@@ -106,7 +124,6 @@ void put (Hash * H, int cur_key, int cur_value)
     }
     
     int_node * new_N = createNode(cur_key, cur_value);
-    
     int_node * tmp = H->K[gen_key]; 
     
     // Empty LL
@@ -114,6 +131,8 @@ void put (Hash * H, int cur_key, int cur_value)
         H->K[gen_key] = new_N;
         H->num_elem++;
         new_N->next = NULL;
+        // if (H->num_elem >= H->to_resize) resize(H);
+        
     } else {
         
         // Key to override at head
@@ -146,15 +165,12 @@ void put (Hash * H, int cur_key, int cur_value)
         // If no conflicts insert at tail
         tmp->next = new_N;
         H->num_elem++;
-        if (H->num_elem != 0) {
-            H->load_factor = H->num_elem / H->cur_size;
-        } else {
-            H->load_factor = 0;
-        }
         new_N->next = NULL;
+        if (H->num_elem >= H->to_resize) resize(H);
     }
-        
-        
+    
+    // Resize if load f = 0.75
+
     return;
 }
 
@@ -177,6 +193,60 @@ void printHash (Hash * H)
     }
 }
 
+//** Resize the hash, copy over using different indexes?
+void resize (Hash * H) 
+{    
+    // Resize to two times as large
+    int new_size = nextPrime(H->cur_size * 2);
+    
+    printf("Resizing... to %d\n", new_size);
+        
+    Hash * copy_H = copyHash(H);        // Use this to copy over original H
+    printf("Hey\n");
+    
+    H->K = realloc(H->K, sizeof(struct int_node) * new_size);
+    H->cur_size = new_size;
+    H->to_resize = new_size * H->load_factor;
+
+    for (int i = 0; i < copy_H->cur_size; i++) {
+        int_node * tmp = copy_H->K[i];
+        
+        while (tmp != NULL) {
+            int key = tmp->k;
+            int val = tmp->v;
+            put(H, key, val);
+            tmp = tmp->next;
+        }          
+    }
+    
+    free_hash(copy_H);
+    
+    printHash(H);
+    return;
+}
+
+//** Works with resize, requires a deep copy of original Hash so our original can realloc
+Hash * copyHash(Hash * H)
+{
+
+    Hash * new_H = createHash(1, H->cur_size);
+    new_H->num_elem = INT_MIN;                      // So we won't go into a resizing loop
+
+    for (int i = 0; i < H->cur_size; i++) {
+        int_node * tmp = H->K[i];
+        
+        while (tmp != NULL) {
+            int key = tmp->k;
+            int val = tmp->v;
+            put(new_H, key, val);
+            tmp = tmp->next;
+        }          
+    }    
+    printf("success!\n");
+    return new_H;
+}
+
+//** Calculates load factor
 double load_factor(Hash * H) 
 {
     printf("Nodes / size = %d / %d\n", H->num_elem, H->cur_size);
@@ -184,6 +254,8 @@ double load_factor(Hash * H)
     return H->load_factor;
 }
 
+
+//** Frees entire hash
 void free_hash (Hash * H) 
 {
 
