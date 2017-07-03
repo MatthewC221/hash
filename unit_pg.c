@@ -7,6 +7,8 @@
 int main(int argc, char *argv[]) 
 {
     
+    // Unit tests for put and get (with free)
+    
     printf("\n/// Unit testing put and get /// \n\n");
     srand(time(NULL));
     int hash_size = rand() % 100 + 60;
@@ -37,16 +39,10 @@ int main(int argc, char *argv[])
     printHash(H);
     printf("Load factor = %2f\n", load_factor(H));
     
-    /*
-    for (int i = 0; i < 20; i++) {
-        free_node(H, i);
-        printHash(H);
-    }
-    
-    */
    
-    
-    // free_hash(H);
+    free(array_k);
+    free(array_v);
+    free_hash(H);
     
 
 

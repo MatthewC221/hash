@@ -2,3 +2,12 @@
 - Basic functions added: createNode, nextPrime, isPrime, etc. (helper functions). 
 - Important functionality added = free_hash, put, delete_key, print_hash
 - Next: create unit tests for current functions, add get (look up)
+
+27/6/17
+- Important functionality = get
+- Also created tests + load factor tracking
+
+3/7/17
+- Added more unit tests
+- Load factor checking more efficient (doesn't divide each time)
+- Added copyHash and automatic resizing. Not entirely sure if it's spreading the keys out properly tho
