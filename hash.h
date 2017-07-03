@@ -48,6 +48,7 @@ int_node * createNode(int cur_key, int cur_value);
 void resize(Hash * H);
 Hash * copyHash(Hash * H);
 void free_hash(Hash * H);
+void free_node(Hash * H, int key);
 // Function decl
 
 void set_lf (Hash * H, double new_load)
@@ -207,7 +208,19 @@ void resize (Hash * H)
     H->K = realloc(H->K, sizeof(struct int_node) * new_size);
     H->cur_size = new_size;
     H->to_resize = new_size * H->load_factor;
-
+    
+    /* Have to free the nodes first?
+    for (int i = 0; i < H->cur_size; i++) {
+        int_node * free_n = H->K[i];
+        while (free_n != NULL) {
+            int key = free_n->k;
+            free_node(H, key);
+            free_n = free_n->next;
+        }
+        H->K[i] = NULL;
+    }
+    */
+    
     for (int i = 0; i < copy_H->cur_size; i++) {
         int_node * tmp = copy_H->K[i];
         
