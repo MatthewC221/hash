@@ -12,6 +12,8 @@ Initial goals (Priority):
     - Can view current state of hashes, % of collisions, current load factor, longest chain, etc. 
       in a meaningful way
       
+My first competitor will be Python's dict
+      
 Things to learn
 
 - Variadic functions (allow for variable amount of args)
