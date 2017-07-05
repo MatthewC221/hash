@@ -4,6 +4,7 @@
 #include <math.h>
 #include <limits.h>
 #include <stdarg.h>
+#include <assert.h>
 
 #ifndef _hash_h
 #define _hash_h
@@ -53,7 +54,10 @@ void free_node(Hash * H, int key);
 
 void set_lf (Hash * H, double new_load)
 {
-    if (new_load) H->load_factor = new_load;
+    if (new_load) {
+        H->load_factor = new_load;
+        H->to_resize = new_load * H->cur_size;
+    }
 }
 
 /* Incorporate type later
@@ -94,7 +98,7 @@ Hash * createHash(int elements, ...)
         printf("Resizing to prime number: %d\n", starting_size);
     }
     
-    printf("%sHash%s created: init size = %s%d%s\n", RED, END, GREEN, starting_size, END);
+    // printf("%sHash%s created: init size = %s%d%s\n", RED, END, GREEN, starting_size, END);
     
     Hash * new_hash = malloc(sizeof(struct Hash));
     
@@ -139,7 +143,7 @@ void put (Hash * H, int cur_key, int cur_value)
         // Key to override at head
         if (tmp->next == NULL && tmp->k == cur_key) {
             tmp->v = cur_value;
-            printf("Overriden hash value %s%d%s at index %s%d%s\n", YELLOW, cur_value, END, YELLOW, gen_key, END);
+            // printf("Overriden hash value %s%d%s at index %s%d%s\n", YELLOW, cur_value, END, YELLOW, gen_key, END);
             free(new_N);
             return;
         }
@@ -148,7 +152,7 @@ void put (Hash * H, int cur_key, int cur_value)
         while (tmp->next != NULL) {
             if (tmp->k == cur_key) {
                 tmp->v = cur_value;
-                printf("Overriden hash value %s%d%s at index %s%d%s\n", YELLOW, cur_value, END, YELLOW, gen_key, END);
+                // printf("Overriden hash value %s%d%s at index %s%d%s\n", YELLOW, cur_value, END, YELLOW, gen_key, END);
                 free(new_N);
                 return;
             } 
@@ -158,7 +162,7 @@ void put (Hash * H, int cur_key, int cur_value)
         // Key to override at very end
         if (tmp->k == cur_key) {
             tmp->v = cur_value;
-            printf("Overriden hash value %s%d%s at index %s%d%s\n", YELLOW, cur_value, END, YELLOW, gen_key, END);
+            // printf("Overriden hash value %s%d%s at index %s%d%s\n", YELLOW, cur_value, END, YELLOW, gen_key, END);
             free(new_N);
             return;
         } 
@@ -200,26 +204,33 @@ void resize (Hash * H)
     // Resize to two times as large
     int new_size = nextPrime(H->cur_size * 2);
     
-    printf("Resizing... to %d\n", new_size);
+    
+    printf("----------\nNew hash size = %d\n", new_size);
+    printf("Current %sLF%s = %s%.2f%s\n", YELLOW, END, YELLOW, H->load_factor, END);
+    printf("Nodes / Size = %s%d%s / %s%d%s\n----------\n", RED, H->num_elem, END, GREEN, H->cur_size, END);
         
     Hash * copy_H = copyHash(H);        // Use this to copy over original H
-    printf("Hey\n");
+    int saved = H->cur_size;
     
-    H->K = realloc(H->K, sizeof(struct int_node) * new_size);
-    H->cur_size = new_size;
-    H->to_resize = new_size * H->load_factor;
-    
-    /* Have to free the nodes first?
+    // Have to free the nodes first?
     for (int i = 0; i < H->cur_size; i++) {
-        int_node * free_n = H->K[i];
-        while (free_n != NULL) {
-            int key = free_n->k;
-            free_node(H, key);
-            free_n = free_n->next;
+        int_node * del = H->K[i];
+        
+        while (del != NULL) {
+            int_node *tmp = del;
+            del = del->next;
+            free(tmp);
         }
         H->K[i] = NULL;
     }
-    */
+    
+    H->K = realloc(H->K, sizeof(struct int_node) * new_size);
+    H->cur_size = new_size;
+    H->to_resize = new_size * H->load_factor;    
+    H->num_elem = 0;
+    
+    // Initialise the rest of the nodes to NULL
+    for (int i = saved; i < H->cur_size; i++) H->K[i] = NULL;
     
     for (int i = 0; i < copy_H->cur_size; i++) {
         int_node * tmp = copy_H->K[i];
@@ -231,10 +242,8 @@ void resize (Hash * H)
             tmp = tmp->next;
         }          
     }
-    
     free_hash(copy_H);
     
-    printHash(H);
     return;
 }
 
@@ -255,7 +264,7 @@ Hash * copyHash(Hash * H)
             tmp = tmp->next;
         }          
     }    
-    printf("success!\n");
+    
     return new_H;
 }
 
@@ -272,7 +281,7 @@ double load_factor(Hash * H)
 void free_hash (Hash * H) 
 {
 
-    printf("Deleting 0->%d\n", H->cur_size);
+    // printf("Deleting 0->%d\n", H->cur_size);
     for (int i = 0; i < H->cur_size; i++) {
         int_node *del = H->K[i];
         
@@ -346,6 +355,7 @@ void free_node(Hash * H, int key)
 
 }
 
+//** Get value from key
 int get(Hash * H, int key) 
 {
     int gen_key = 0;

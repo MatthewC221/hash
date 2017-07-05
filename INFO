@@ -1,0 +1,19 @@
+Explaining what each program does
+
+Basic unit tests
+
+test.c = basic put and printHash test
+unit_pg.c = unit tests for put and get (can't really test put w/o get)
+collision.c = unit testing put and get w/ collision handling
+resize.c = unit testing for resizing as the table enlarges (load factor = 0.75 DEFAULT)
+
+Timing tests
+
+time_insert.c | resize_test.py (C and Py equivalents of putting)
+
+
+DOCUMENTATION
+
+INFO = this DOC
+progress = small diary
+README = intro to project

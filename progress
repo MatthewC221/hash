@@ -11,3 +11,9 @@
 - Added more unit tests
 - Load factor checking more efficient (doesn't divide each time)
 - Added copyHash and automatic resizing. Not entirely sure if it's spreading the keys out properly tho
+
+5/7/17
+- Added more unit tests + timing tests
+- Fixed auto resizing, no mem leaks w/VALGRIND
+- Added some python scripts
+- Thinking about organising everything better
