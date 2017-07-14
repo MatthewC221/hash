@@ -204,10 +204,11 @@ void resize (Hash * H)
     // Resize to two times as large
     int new_size = nextPrime(H->cur_size * 2);
     
-    
+    /*
     printf("----------\nNew hash size = %d\n", new_size);
     printf("Current %sLF%s = %s%.2f%s\n", YELLOW, END, YELLOW, H->load_factor, END);
     printf("Nodes / Size = %s%d%s / %s%d%s\n----------\n", RED, H->num_elem, END, GREEN, H->cur_size, END);
+    */
         
     Hash * copy_H = copyHash(H);        // Use this to copy over original H
     int saved = H->cur_size;

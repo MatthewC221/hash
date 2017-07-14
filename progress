@@ -17,3 +17,9 @@
 - Fixed auto resizing, no mem leaks w/VALGRIND
 - Added some python scripts
 - Thinking about organising everything better
+
+14/7/17
+- Added more timing tests
+- Perl script to test both
+- Researching open addr
+- Currently beating out python's dict but can be more optimised.
