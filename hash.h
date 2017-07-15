@@ -257,11 +257,22 @@ Hash * copyHash(Hash * H)
 
     for (int i = 0; i < H->cur_size; i++) {
         int_node * tmp = H->K[i];
-        
+        int_node * cur;               // Keep track of current
         while (tmp != NULL) {
             int key = tmp->k;
             int val = tmp->v;
-            put(new_H, key, val);
+            
+            int_node * new_node = createNode(key, val);
+            // Instead of calling put, copy LL here
+            // Saves ~0.07 seconds
+            if (new_H->K[i] == NULL) {
+                new_H->K[i] = new_node;
+                cur = new_H->K[i];
+            } else {
+                cur->next = new_node;
+                cur = new_node;
+            }
+            //put(new_H, key, val);
             tmp = tmp->next;
         }          
     }    
