@@ -39,7 +39,6 @@ int main(int argc, char *argv[])
     }
     
     printf("\n");
-    printf("HERE\n");
     printHash(H);
     
     for (int i = 0; i < 100; i++) {
@@ -52,12 +51,11 @@ int main(int argc, char *argv[])
             assert(res == INT_MIN);
         } else {
             assert(arr_k[i] == res);
-            free_node(H, i);
+            del(H, i);
         }
         printf("Test %d passed\n\n", i + 1);
     }
-     
-    printHash(H);
+     ;
     printf("Load factor = %2f\n", load_factor(H));
     free_hash(H);
     free(arr_k);

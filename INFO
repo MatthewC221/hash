@@ -9,7 +9,7 @@ resize.c = unit testing for resizing as the table enlarges (load factor = 0.75 D
 
 Timing tests
 
-time_insert.c, resize_test.py (C and Py equivalents of putting)
+time_insert.c, time_insert.py (C and Py equivalents of putting)
 handler.pl = tests the two above
 
 DOCUMENTATION

@@ -14,6 +14,7 @@
 #define END  "\e[0m"                // For end colours
 
 #define COLLISION 1
+#define OPEN_ADDR 2
 
 // Allow string hash as well
 // Hash * createHash(int size);
@@ -49,7 +50,7 @@ int_node * createNode(int cur_key, int cur_value);
 void resize(Hash * H);
 Hash * copyHash(Hash * H);
 void free_hash(Hash * H);
-void free_node(Hash * H, int key);
+void del(Hash * H, int key);
 // Function decl
 
 void set_lf (Hash * H, double new_load)
@@ -91,7 +92,7 @@ Hash * createHash(int elements, ...)
     }   
 
     if (!starting_size) {
-        fprintf(stderr, "%shash err: invalid starting_size\n"); 
+        fprintf(stderr, "hash err: invalid starting_size\n"); 
         return NULL; 
     } else if (!isPrime(starting_size)) {
         starting_size = nextPrime(starting_size);
@@ -100,9 +101,9 @@ Hash * createHash(int elements, ...)
     
     // printf("%sHash%s created: init size = %s%d%s\n", RED, END, GREEN, starting_size, END);
     
-    Hash * new_hash = malloc(sizeof(struct Hash));
+    Hash * new_hash = (Hash *)malloc(sizeof(struct Hash));
     
-    new_hash->K = malloc(starting_size * sizeof(struct int_node));
+    new_hash->K = (int_node **)malloc(starting_size * sizeof(struct int_node));
     new_hash->cur_size = starting_size;
     new_hash->num_elem = 0;
     new_hash->load_factor = 0.75;           // Default load factor (change at 0.75 = N / size)
@@ -125,56 +126,38 @@ void put (Hash * H, int cur_key, int cur_value)
     
     if (cur_key != 0) {
         int size = H->cur_size;
-        gen_key = cur_key % size;           // Generated key
+        gen_key = (cur_key - (cur_key / H->cur_size) * H->cur_size);           // Generated key
     }
-    
-    int_node * new_N = createNode(cur_key, cur_value);
+
     int_node * tmp = H->K[gen_key]; 
+    int_node * new_N = createNode(cur_key, cur_value);
     
     // Empty LL
     if (tmp == NULL) {
+
         H->K[gen_key] = new_N;
         H->num_elem++;
-        new_N->next = NULL;
-        // if (H->num_elem >= H->to_resize) resize(H);
         
     } else {
         
-        // Key to override at head
-        if (tmp->next == NULL && tmp->k == cur_key) {
-            tmp->v = cur_value;
-            // printf("Overriden hash value %s%d%s at index %s%d%s\n", YELLOW, cur_value, END, YELLOW, gen_key, END);
-            free(new_N);
-            return;
-        }
-        
-        // Key to override in middle
-        while (tmp->next != NULL) {
+        int_node * before = H->K[gen_key];
+
+        while (tmp != NULL) {
             if (tmp->k == cur_key) {
                 tmp->v = cur_value;
-                // printf("Overriden hash value %s%d%s at index %s%d%s\n", YELLOW, cur_value, END, YELLOW, gen_key, END);
                 free(new_N);
                 return;
             } 
+            before = tmp;
             tmp = tmp->next;
         }
-        
-        // Key to override at very end
-        if (tmp->k == cur_key) {
-            tmp->v = cur_value;
-            // printf("Overriden hash value %s%d%s at index %s%d%s\n", YELLOW, cur_value, END, YELLOW, gen_key, END);
-            free(new_N);
-            return;
-        } 
             
         // If no conflicts insert at tail
-        tmp->next = new_N;
+        before->next = new_N;
         H->num_elem++;
-        new_N->next = NULL;
+
         if (H->num_elem >= H->to_resize) resize(H);
     }
-    
-    // Resize if load f = 0.75
 
     return;
 }
@@ -225,7 +208,7 @@ void resize (Hash * H)
         H->K[i] = NULL;
     }
     
-    H->K = realloc(H->K, sizeof(struct int_node) * new_size);
+    H->K = (int_node **)realloc(H->K, sizeof(struct int_node) * new_size);
     H->cur_size = new_size;
     H->to_resize = new_size * H->load_factor;    
     H->num_elem = 0;
@@ -292,8 +275,6 @@ double load_factor(Hash * H)
 //** Frees entire hash
 void free_hash (Hash * H) 
 {
-
-    // printf("Deleting 0->%d\n", H->cur_size);
     for (int i = 0; i < H->cur_size; i++) {
         int_node *del = H->K[i];
         
@@ -305,7 +286,6 @@ void free_hash (Hash * H)
         
         H->K[i] = NULL;
     }
-    // H->K = NULL;
     free(H->K);
     H->K = NULL;
     free(H);
@@ -313,12 +293,12 @@ void free_hash (Hash * H)
 
 
 //** Frees a node, if that node doesn't exist print err
-void free_node(Hash * H, int key) 
+void del(Hash * H, int key) 
 {
     int gen_key = 0;
     
     // Don't mod by 0
-    if (key) gen_key = key % H->cur_size;
+    if (key) gen_key = (key - (key / H->cur_size) * H->cur_size);
     
     int_node * del_before = H->K[gen_key]; 
     int_node * del_after = H->K[gen_key];
@@ -391,7 +371,7 @@ int get(Hash * H, int key)
 int_node * createNode(int cur_key, int cur_value)
 {
 
-    int_node * N = malloc(sizeof(struct int_node));
+    int_node * N = (int_node *)malloc(sizeof(struct int_node));
 
     N->k = cur_key;
     N->v = cur_value;

@@ -15,16 +15,25 @@ printf("Running without checks\n");
 printf("### Running timing tests for time_insert.c ###\n");
 for ($start = 10; $start <= $max; $start = $start * 10) {
     my $start_time = time();
-    $tmp_string = "./time_insert $start $start 0 >/dev/null 2>&1";
+    $tmp_string = "./time_insert $start 0 0 1 >/dev/null 2>&1";
     system($tmp_string);
     printf("Time elapsed for $start inserts:%.2f\n", time() - $start_time);
     printf("------------\n");
 }
 
-printf("\n### Running timing tests for resize_test.py ###\n");
+printf("### Running timing tests for time_insert.c WITH size initialising ###\n");
 for ($start = 10; $start <= $max; $start = $start * 10) {
     my $start_time = time();
-    $tmp_string2 = "./resize_test.py $start $start 0 >/dev/null 2>&1";
+    $tmp_string = "./time_insert $start 0 0 $start >/dev/null 2>&1";
+    system($tmp_string);
+    printf("Time elapsed for $start inserts:%.2f\n", time() - $start_time);
+    printf("------------\n");
+}
+
+printf("\n### Running timing tests for time_insert.py ###\n");
+for ($start = 10; $start <= $max; $start = $start * 10) {
+    my $start_time = time();
+    $tmp_string2 = "./time_insert.py $start 0 0 >/dev/null 2>&1";
     system($tmp_string2);
     printf("Time elapsed for $start inserts:%.2f\n", time() - $start_time);
     printf("------------\n");
@@ -34,17 +43,19 @@ printf("Running with checks\n");
 printf("### Running timing tests for time_insert.c ###\n");
 for ($start = 10; $start <= $max; $start = $start * 10) {
     my $start_time = time();
-    $tmp_string = "./time_insert $start $start 1 >/dev/null 2>&1";
+    $tmp_string = "./time_insert $start 1 0 1 >/dev/null 2>&1";
     system($tmp_string);
     printf("Time elapsed for $start inserts:%.2f\n", time() - $start_time);
     printf("------------\n");
 }
 
-printf("### Running timing tests for resize_test.py ###\n");
+printf("### Running timing tests for time_insert.py ###\n");
 for ($start = 10; $start <= $max; $start = $start * 10) {
     my $start_time = time();
-    $tmp_string2 = "./resize_test.py $start $start 1 >/dev/null 2>&1";
+    $tmp_string2 = "./time_insert.py $start 1 0 >/dev/null 2>&1";
     system($tmp_string2);
     printf("Time elapsed for $start inserts:%.2f\n", time() - $start_time);
     printf("------------\n");
 }
+
+# printf("### Running timing tests for ")
