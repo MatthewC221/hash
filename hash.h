@@ -151,27 +151,19 @@ void put (Hash * H, int cur_key, int cur_value)
 {
     int gen_key = 0;
     
-    if (cur_key != 0) {
-        int size = H->cur_size;
-        gen_key = (cur_key - (cur_key / H->cur_size) * H->cur_size);           // Generated key
-    }
+    if (cur_key < 0) cur_key = cur_key * -1;
+    if (cur_key) gen_key = (cur_key - (cur_key / H->cur_size) * H->cur_size); 
 
     // #### Collision put ####
     if (H->type == COLLISION) {
-
         int_node * tmp = H->K[gen_key]; 
-        int_node * new_N = createNode(cur_key, cur_value);
-        
+        int_node * new_N = createNode(cur_key, cur_value);     
         // Empty LL
         if (tmp == NULL) {
-
             H->K[gen_key] = new_N;
-            H->num_elem++;
-            
-        } else {
-            
+            H->num_elem++;       
+        } else {   
             int_node * before = H->K[gen_key];
-
             while (tmp != NULL) {
                 if (tmp->k == cur_key) {
                     tmp->v = cur_value;
@@ -180,8 +172,7 @@ void put (Hash * H, int cur_key, int cur_value)
                 } 
                 before = tmp;
                 tmp = tmp->next;
-            }
-                
+            }              
             // If no conflicts insert at tail
             before->next = new_N;
             H->num_elem++;
@@ -191,21 +182,23 @@ void put (Hash * H, int cur_key, int cur_value)
 
     // #### Open addressing put ####
     } else if (H->type == OPEN_ADDR) {
-
         k_v * new_N = createKV(cur_key, cur_value);
-
-        // Linear probing once around just in case
+        // Linear probing once around for a spot
         int saved = gen_key;     
-
         while (1) {
-            if (!H->key_value[gen_key]) {
+            // Inserting new key
+            if (!H->key_value[gen_key] || (H->key_value[gen_key]->k == INT_MIN)) {
+                H->num_elem++;
                 H->key_value[gen_key] = new_N;
+                break;
+            // Overwriting key
+            } else if (H->key_value[gen_key] && (H->key_value[gen_key]->k == cur_key)) {
+                H->key_value[gen_key]->v = cur_value;
                 break;
             }
             gen_key++;
 
             if (gen_key >= H->cur_size) gen_key = 0;
-
             // If out of space
             if (gen_key == saved) {
                 printHash(H);
@@ -227,6 +220,7 @@ void printHash (Hash * H)
     printf("    Hash\n");
 
     if (H->type == COLLISION) {
+        printf("Collision hash\n");
         for (int i = 0; i < H->cur_size; i++) {
             printf("[%s%d%s] : ", YELLOW, i, END);       
             int_node * tmp = H->K[i];
@@ -241,9 +235,10 @@ void printHash (Hash * H)
             printf("\n");
         }
     } else if (H->type == OPEN_ADDR) {
+        printf("Open addressing hash\n");
         for (int i = 0; i < H->cur_size; i++) {
             printf("[%s%d%s] : ", YELLOW, i, END);
-            if (H->key_value[i]) {
+            if (H->key_value[i] && H->key_value[i]->k != INT_MIN) {
                 printf("(%d:%d)\n", H->key_value[i]->k, H->key_value[i]->v);
             } else {
                 printf("\n");
@@ -314,8 +309,7 @@ Hash * copyHash(Hash * H)
         int_node * cur;               // Keep track of current
         while (tmp != NULL) {
             int key = tmp->k;
-            int val = tmp->v;
-            
+            int val = tmp->v;        
             int_node * new_node = createNode(key, val);
             // Instead of calling put, copy LL here
             // Saves ~0.07 seconds
@@ -349,18 +343,17 @@ void free_hash (Hash * H)
     if (H->type == COLLISION) {
         for (int i = 0; i < H->cur_size; i++) {
             int_node *del = H->K[i];
-            
             while (del != NULL) {
                 int_node *tmp = del;
                 del = del->next;
                 free(tmp);
-            }
-            
+            } 
             H->K[i] = NULL;
         }
         free(H->K);
         H->K = NULL;
         free(H);
+
     } else if (H->type == OPEN_ADDR) {
         for (int i = 0; i < H->cur_size; i++) {
             if (H->key_value[i]) {
@@ -380,95 +373,119 @@ void del(Hash * H, int key)
     int gen_key = 0;
     
     // Don't mod by 0
+    if (key < 0) key = key * -1;
     if (key) gen_key = (key - (key / H->cur_size) * H->cur_size);
     
-    int_node * del_before = H->K[gen_key]; 
-    int_node * del_after = H->K[gen_key];
-    
-    // printf("The generated key = %d\n", gen_key);
-    
-    if (del_after == NULL) {
-        fprintf(stderr, "<Hash.h>: illegal removal of non-existent key\n");
-        return;
-    } else {
-    
-        bool exists = false;
-        while (del_after->next != NULL) {       
-            if (del_after->k == key) {
-                if (del_after == H->K[gen_key]) {            // Deleting the head of len = 1
-                    if (del_after->next == NULL) {
-                        H->K[gen_key] = NULL;
-                    } else {                                                                    
-                        H->K[gen_key] = del_after->next;
+    if (H->type == COLLISION) {
+        int_node * del_before = H->K[gen_key]; 
+        int_node * del_after = H->K[gen_key];
+        if (del_after == NULL) {
+            fprintf(stderr, "<Hash.h>: illegal removal of non-existent key\n");
+            return;
+        } else {
+            bool exists = false;
+            while (del_after->next != NULL) {       
+                if (del_after->k == key) {                       // After finding the node
+
+                    // Case 1: Deleting the head (either a single head or a LL)
+                    if (del_after == H->K[gen_key]) {          
+                        if (del_after->next == NULL) {
+                            H->K[gen_key] = NULL;
+                        } else {                                                                    
+                            H->K[gen_key] = del_after->next;
+                        }
+                    // Case 2: If node was in the middle of LL
+                    } else if (del_after->next != NULL) {
+                        int_node * new_next = del_after->next;
+                        del_before->next = new_next;
+                    // Case 3: If node was at the end
+                    } else if (del_after->next == NULL) {
+                        del_before->next = NULL;
                     }
-                } else if (del_after->next != NULL) {
-                    int_node * new_next = del_after->next;
-                    del_before->next = new_next;
-                } else if (del_after->next == NULL) {
+                    exists = true;
+                    free(del_after);
+                    break;
+                }
+                del_before = del_after;
+                del_after = del_after->next;
+            }
+
+            // If the last node
+            if (!exists && del_after->k == key) {
+                if (del_after == H->K[gen_key]) {
+                    H->K[gen_key] = NULL;
+                } else {
                     del_before->next = NULL;
                 }
-                exists = true;
                 free(del_after);
+            } else if (!exists) {
+                fprintf(stderr, "<Hash.h>: illegal removal of non-existent key\n");
+            }
+        }
+    } else if (H->type == OPEN_ADDR) {
+        int saved = gen_key;
+        // Search for key
+        while (1) {
+            // Can't free the node, just set it to a marker (INT_MIN)
+            if (H->key_value[gen_key] && H->key_value[gen_key]->k == key) {
+                H->key_value[gen_key]->k = INT_MIN;
+                H->key_value[gen_key]->v = INT_MIN;
                 break;
             }
-            del_before = del_after;
-            del_after = del_after->next;
-        }
-        
-        if (!exists && del_after->k == key) {
-            if (del_after == H->K[gen_key]) {
-                H->K[gen_key] = NULL;
-            } else {
-                del_before->next = NULL;
-            }
-            free(del_after);
-        } else if (!exists) {
-            fprintf(stderr, "<Hash.h>: illegal removal of non-existent key\n");
-        }
-    }
+            gen_key++;
+            if (gen_key == saved || H->key_value[gen_key] == NULL) break;    
+            if (gen_key >= H->cur_size) gen_key = 0;
 
+        }        
+    }
 }
 
 //** Get value from key
 int get(Hash * H, int key) 
 {
     int gen_key = 0;
-    if (key) gen_key = key % H->cur_size;
-    
-    int_node * lookup = H->K[gen_key];
-    
-    while (lookup) {
-        if (lookup->k == key) {
-            return lookup->v;
+
+    // Turn negative keys positive
+    if (key < 0) key = key * -1;
+    if (key) gen_key = (key - (key / H->cur_size) * H->cur_size);
+
+    if (H->type == COLLISION) {
+        int_node * lookup = H->K[gen_key];
+        while (lookup) {
+            if (lookup->k == key) {
+                return lookup->v;
+            }
+            lookup = lookup->next;
         }
-        lookup = lookup->next;
-    }
-    
-    // Returns here
-    fprintf(stderr, "<Hash.h>: illegal key lookup of non-existent or deleted key %d\n", key);
+    } else if (H->type == OPEN_ADDR) {
+        int saved = gen_key;
+        while (1) {
+            if (H->key_value[gen_key] && H->key_value[gen_key]->k == key) {
+                return H->key_value[gen_key]->v;
+            }
+            gen_key++;
+            if (gen_key >= H->cur_size) gen_key = 0;
+            if (gen_key == saved || H->key_value[gen_key] == NULL) break;     // Non-existent key
+        }
+    }    // fprintf(stderr, "<Hash.h>: illegal key lookup of non-existent or deleted key %d\n", key);
     return INT_MIN;
 }
 
 //** Creates a node for collision handling
 int_node * createNode(int cur_key, int cur_value)
 {
-
     int_node * N = (int_node *)malloc(sizeof(struct int_node));
-
     N->k = cur_key;
     N->v = cur_value;
-    
     N->next = NULL;
-    
+
     return N;   
 }
 
 //** Creates a node for open addressing
 k_v * createKV(int cur_key, int cur_value)
 {
-
     k_v * N = (k_v *)malloc(sizeof(struct k_v));
-
     N->k = cur_key;
     N->v = cur_value;
 
@@ -478,7 +495,6 @@ k_v * createKV(int cur_key, int cur_value)
 //** Finds next prime during resizing
 int nextPrime(int num)
 {
-
     for (int i = num + 1; ; i++) {
         if (isPrime(i)) {
             return i;
@@ -491,7 +507,6 @@ int nextPrime(int num)
 //** Determines if prime
 int isPrime(int num)
 {
-
     if (num == 1) return 1;
 
     int upper_bound = sqrt(num);
