@@ -1,4 +1,4 @@
-all: test unit_pg collision resize time_resize lf_test visual
+all: test unit_pg collision resize time_resize lf_test open_addr
 
 test: test.c hash.h
 	gcc -o test test.c -lm -g
@@ -18,5 +18,5 @@ time_resize: time_insert.c hash.h
 lf_test: lf_test.c hash.h
 	gcc -o lf_test lf_test.c -lm -g    
 
-visual: visual.c hash.h
-	gcc -o visual visual.c -lm -g 
+open_addr: open_addr.c hash.h
+	gcc -o open_addr open_addr.c -lm -g 

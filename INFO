@@ -6,6 +6,7 @@ test.c = basic put and printHash test
 unit_pg.c = unit tests for put and get (can't really test put w/o get)
 collision.c = unit testing put and get w/ collision handling
 resize.c = unit testing for resizing as the table enlarges (load factor = 0.75 DEFAULT)
+open_addr.c = first program with open addressing
 
 Timing tests
 

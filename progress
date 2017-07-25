@@ -28,3 +28,8 @@
 - Currently ~10% slower than Python dict
 - Added optimisations to modulus
 - Change some conditionals to loops
+
+25/7/17
+- Adding open addr (put, free, createHash)
+- Added some testing
+- Completed some manual tests with valgrind

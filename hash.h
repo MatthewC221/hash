@@ -29,28 +29,45 @@ typedef struct int_node
     
 } int_node;
 
+typedef struct k_v
+{
+    int k;
+    int v;
+
+} k_v;
+
 typedef struct Hash
 {
+
+    // For collisions
     int_node ** K;
     int cur_size;
     int num_elem;   
     
+    // For key value pairs
+    k_v ** key_value;
+
     // Number of elements until resize            
     int to_resize;
     
     // The load factor before resizing (num_elem / cur_size)
     // Can be > 1 for large chains
     
-    double load_factor;         
+    double load_factor;   
+    int type;      
 
 } Hash;
 
+
+
 // Function decl
+k_v * createKV(int cur_key, int cur_value);
 int_node * createNode(int cur_key, int cur_value);
 void resize(Hash * H);
 Hash * copyHash(Hash * H);
 void free_hash(Hash * H);
 void del(Hash * H, int key);
+void printHash(Hash * H);
 // Function decl
 
 void set_lf (Hash * H, double new_load)
@@ -103,16 +120,26 @@ Hash * createHash(int elements, ...)
     
     Hash * new_hash = (Hash *)malloc(sizeof(struct Hash));
     
-    new_hash->K = (int_node **)malloc(starting_size * sizeof(struct int_node));
+    // For collision, create the array of LL
+    if (type == COLLISION) {
+        new_hash->K = (int_node **)malloc(starting_size * sizeof(struct int_node));
+        for (int i = 0; i < starting_size; i++) {
+            new_hash->K[i] = NULL;
+        }
+    // For open addr, create array of tuples
+    } else {
+        new_hash->key_value = (k_v **)malloc(starting_size * sizeof(struct k_v));
+        for (int i = 0; i < starting_size; i++) {
+            new_hash->key_value[i] = NULL;
+        }
+    }
+
+    new_hash->type = type;                  // Collision / open addr
     new_hash->cur_size = starting_size;
     new_hash->num_elem = 0;
     new_hash->load_factor = 0.75;           // Default load factor (change at 0.75 = N / size)
     
     new_hash->to_resize = new_hash->cur_size * new_hash->load_factor;
-    
-    for (int i = 0; i < starting_size; i++) {
-        new_hash->K[i] = NULL;
-    }
     
     return new_hash;
 }
@@ -129,35 +156,67 @@ void put (Hash * H, int cur_key, int cur_value)
         gen_key = (cur_key - (cur_key / H->cur_size) * H->cur_size);           // Generated key
     }
 
-    int_node * tmp = H->K[gen_key]; 
-    int_node * new_N = createNode(cur_key, cur_value);
-    
-    // Empty LL
-    if (tmp == NULL) {
+    // #### Collision put ####
+    if (H->type == COLLISION) {
 
-        H->K[gen_key] = new_N;
-        H->num_elem++;
+        int_node * tmp = H->K[gen_key]; 
+        int_node * new_N = createNode(cur_key, cur_value);
         
-    } else {
-        
-        int_node * before = H->K[gen_key];
+        // Empty LL
+        if (tmp == NULL) {
 
-        while (tmp != NULL) {
-            if (tmp->k == cur_key) {
-                tmp->v = cur_value;
-                free(new_N);
-                return;
-            } 
-            before = tmp;
-            tmp = tmp->next;
-        }
+            H->K[gen_key] = new_N;
+            H->num_elem++;
             
-        // If no conflicts insert at tail
-        before->next = new_N;
-        H->num_elem++;
+        } else {
+            
+            int_node * before = H->K[gen_key];
 
-        if (H->num_elem >= H->to_resize) resize(H);
+            while (tmp != NULL) {
+                if (tmp->k == cur_key) {
+                    tmp->v = cur_value;
+                    free(new_N);
+                    return;
+                } 
+                before = tmp;
+                tmp = tmp->next;
+            }
+                
+            // If no conflicts insert at tail
+            before->next = new_N;
+            H->num_elem++;
+
+            if (H->num_elem >= H->to_resize) resize(H); 
+        }
+
+    // #### Open addressing put ####
+    } else if (H->type == OPEN_ADDR) {
+
+        k_v * new_N = createKV(cur_key, cur_value);
+
+        // Linear probing once around just in case
+        int saved = gen_key;     
+
+        while (1) {
+            if (!H->key_value[gen_key]) {
+                H->key_value[gen_key] = new_N;
+                break;
+            }
+            gen_key++;
+
+            if (gen_key >= H->cur_size) gen_key = 0;
+
+            // If out of space
+            if (gen_key == saved) {
+                printHash(H);
+                printf("Need to resize\n");
+                exit(0);                
+            }
+
+        }
+
     }
+
 
     return;
 }
@@ -166,18 +225,30 @@ void put (Hash * H, int cur_key, int cur_value)
 void printHash (Hash * H) 
 {
     printf("    Hash\n");
-    for (int i = 0; i < H->cur_size; i++) {
-        printf("[%s%d%s] : ", YELLOW, i, END);       
-        int_node * tmp = H->K[i];
-        
-        if (tmp != NULL) {        
-            while (tmp->next != NULL) {
-                printf("(%d:%d)->", tmp->k, tmp->v);
-                tmp = tmp->next;
+
+    if (H->type == COLLISION) {
+        for (int i = 0; i < H->cur_size; i++) {
+            printf("[%s%d%s] : ", YELLOW, i, END);       
+            int_node * tmp = H->K[i];
+            
+            if (tmp != NULL) {        
+                while (tmp->next != NULL) {
+                    printf("(%d:%d)->", tmp->k, tmp->v);
+                    tmp = tmp->next;
+                }
+                printf("(%d:%d)", tmp->k, tmp->v);
             }
-            printf("(%d:%d)", tmp->k, tmp->v);
+            printf("\n");
         }
-        printf("\n");
+    } else if (H->type == OPEN_ADDR) {
+        for (int i = 0; i < H->cur_size; i++) {
+            printf("[%s%d%s] : ", YELLOW, i, END);
+            if (H->key_value[i]) {
+                printf("(%d:%d)\n", H->key_value[i]->k, H->key_value[i]->v);
+            } else {
+                printf("\n");
+            } 
+        }
     }
 }
 
@@ -275,20 +346,31 @@ double load_factor(Hash * H)
 //** Frees entire hash
 void free_hash (Hash * H) 
 {
-    for (int i = 0; i < H->cur_size; i++) {
-        int_node *del = H->K[i];
-        
-        while (del != NULL) {
-            int_node *tmp = del;
-            del = del->next;
-            free(tmp);
+    if (H->type == COLLISION) {
+        for (int i = 0; i < H->cur_size; i++) {
+            int_node *del = H->K[i];
+            
+            while (del != NULL) {
+                int_node *tmp = del;
+                del = del->next;
+                free(tmp);
+            }
+            
+            H->K[i] = NULL;
         }
-        
-        H->K[i] = NULL;
+        free(H->K);
+        H->K = NULL;
+        free(H);
+    } else if (H->type == OPEN_ADDR) {
+        for (int i = 0; i < H->cur_size; i++) {
+            if (H->key_value[i]) {
+                free(H->key_value[i]);
+            }
+        }
+        free(H->key_value);
+        H->key_value = NULL;
+        free(H);
     }
-    free(H->K);
-    H->K = NULL;
-    free(H);
 }
 
 
@@ -367,7 +449,7 @@ int get(Hash * H, int key)
     return INT_MIN;
 }
 
-//** Creates a node
+//** Creates a node for collision handling
 int_node * createNode(int cur_key, int cur_value)
 {
 
@@ -379,6 +461,18 @@ int_node * createNode(int cur_key, int cur_value)
     N->next = NULL;
     
     return N;   
+}
+
+//** Creates a node for open addressing
+k_v * createKV(int cur_key, int cur_value)
+{
+
+    k_v * N = (k_v *)malloc(sizeof(struct k_v));
+
+    N->k = cur_key;
+    N->v = cur_value;
+
+    return N;
 }
 
 //** Finds next prime during resizing
