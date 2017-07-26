@@ -21,18 +21,13 @@ int main(int argc, char *argv[])
 		int * key = (int *)malloc(sizeof(int) * size);
 
 		for (int i = 0; i < size; i++) {
-			int key_tmp = 10 * i + rand () % 5;
+			int key_tmp = rand () % 1000;
 			put(H, key_tmp, 1);
 			key[i] = key_tmp;
 		}
 
 		printHash(H);
-		for (int i = 0; i < size; i++) {
-			printf("Checking %d = %d\n", key[i], get(H, key[i]));
-			assert(1 == get(H, key[i]));
-		}
 
-		printHash(H);
 		free_hash(H);
 		free(key);
 

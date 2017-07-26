@@ -12,19 +12,37 @@ $max = 1000000;
 
 printf("The first timing test to compare my C hash with Python's dictionary.\n");
 printf("Running without checks\n");
-printf("### Running timing tests for time_insert.c ###\n");
+printf("### Running timing tests for time_insert.c COLLISION ###\n");
 for ($start = 10; $start <= $max; $start = $start * 10) {
     my $start_time = time();
-    $tmp_string = "./time_insert $start 0 0 1 >/dev/null 2>&1";
+    $tmp_string = "./time_insert $start 0 0 1 1 >/dev/null 2>&1";
     system($tmp_string);
     printf("Time elapsed for $start inserts:%.2f\n", time() - $start_time);
     printf("------------\n");
 }
 
-printf("### Running timing tests for time_insert.c WITH size initialising ###\n");
+printf("### Running timing tests for time_insert.c OPEN_ADDR ###\n");
 for ($start = 10; $start <= $max; $start = $start * 10) {
     my $start_time = time();
-    $tmp_string = "./time_insert $start 0 0 $start >/dev/null 2>&1";
+    $tmp_string = "./time_insert $start 0 0 1 2 >/dev/null 2>&1";
+    system($tmp_string);
+    printf("Time elapsed for $start inserts:%.2f\n", time() - $start_time);
+    printf("------------\n");
+}
+
+printf("### Running timing tests for time_insert.c COLLISION WITH size initialising ###\n");
+for ($start = 10; $start <= $max; $start = $start * 10) {
+    my $start_time = time();
+    $tmp_string = "./time_insert $start 0 0 $start 1 >/dev/null 2>&1";
+    system($tmp_string);
+    printf("Time elapsed for $start inserts:%.2f\n", time() - $start_time);
+    printf("------------\n");
+}
+
+printf("### Running timing tests for time_insert.c OPEN_ADDR WITH size initialising ###\n");
+for ($start = 10; $start <= $max; $start = $start * 10) {
+    my $start_time = time();
+    $tmp_string = "./time_insert $start 0 0 $start 2 >/dev/null 2>&1";
     system($tmp_string);
     printf("Time elapsed for $start inserts:%.2f\n", time() - $start_time);
     printf("------------\n");
@@ -43,7 +61,7 @@ printf("Running with checks\n");
 printf("### Running timing tests for time_insert.c ###\n");
 for ($start = 10; $start <= $max; $start = $start * 10) {
     my $start_time = time();
-    $tmp_string = "./time_insert $start 1 0 1 >/dev/null 2>&1";
+    $tmp_string = "./time_insert $start 1 0 1 1 >/dev/null 2>&1";
     system($tmp_string);
     printf("Time elapsed for $start inserts:%.2f\n", time() - $start_time);
     printf("------------\n");
