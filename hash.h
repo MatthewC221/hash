@@ -47,6 +47,7 @@ typedef struct Hash
            
     int to_resize;          // Elements to resize
     
+    int probe_limit;
     double load_factor;     
     int type;               // OPEN_ADDR or COLLISION
 
@@ -125,6 +126,7 @@ Hash * createHash(int elements, ...)
         for (int i = 0; i < starting_size; i++) {
             new_hash->key_value[i] = NULL;
         }
+        new_hash->probe_limit = log2(starting_size);
     }
 
     new_hash->type = type;                  // Collision / open addr
@@ -175,7 +177,9 @@ void put (Hash * H, int cur_key, int cur_value)
     } else if (H->type == OPEN_ADDR) {
         k_v * new_N = createKV(cur_key, cur_value);
         // Linear probing once around for a spot
-        int saved = gen_key;     
+        int saved = gen_key;    
+        int dist_from_key = 0; 
+
         while (1) {
             // Inserting new key
             if (!H->key_value[gen_key] || (H->key_value[gen_key]->k == INT_MIN)) {
@@ -188,8 +192,15 @@ void put (Hash * H, int cur_key, int cur_value)
                 break;
             }
             gen_key++;
-
+            dist_from_key++;
             if (gen_key >= H->cur_size) gen_key = 0;
+
+            // If we reach the probe limit, resize the hash
+
+            if (dist_from_key >= H->probe_limit) {
+                resize(H);
+                gen_key = (cur_key - (cur_key / H->cur_size) * H->cur_size); 
+            }
             
             /* 
             // If out of space
@@ -248,7 +259,6 @@ void resize (Hash * H)
 {    
     // Resize to two times as large
     int new_size = nextPrime(H->cur_size * 2);
-    
     /*
     printf("----------\nNew hash size = %d\n", new_size);
     printf("Current %sLF%s = %s%.2f%s\n", YELLOW, END, YELLOW, H->load_factor, END);
@@ -319,6 +329,7 @@ void resize (Hash * H)
             }
         }
 
+        H->probe_limit = log2(H->cur_size);
         free_hash(copy_H);
     }
     
@@ -472,6 +483,7 @@ void del(Hash * H, int key)
         }
     } else if (H->type == OPEN_ADDR) {
         int saved = gen_key;
+        int dist_from_key = 0;
         // Search for key
         while (1) {
             // Can't free the node, just set it to a marker (INT_MIN)
@@ -481,7 +493,10 @@ void del(Hash * H, int key)
                 break;
             }
             gen_key++;
-            if (gen_key == saved || H->key_value[gen_key] == NULL) break;    
+            dist_from_key++;
+
+            // Limit for probing exceeded, non existent
+            if (H->key_value[gen_key] == NULL || dist_from_key >= H->probe_limit) break;    
             if (gen_key >= H->cur_size) gen_key = 0;
 
         }        
@@ -507,13 +522,17 @@ int get(Hash * H, int key)
         }
     } else if (H->type == OPEN_ADDR) {
         int saved = gen_key;
+        int dist_from_key = 0;
+
         while (1) {
             if (H->key_value[gen_key] && H->key_value[gen_key]->k == key) {
                 return H->key_value[gen_key]->v;
             }
             gen_key++;
+            dist_from_key++;
+
             if (gen_key >= H->cur_size) gen_key = 0;
-            if (gen_key == saved || H->key_value[gen_key] == NULL) break;     // Non-existent key
+            if (H->key_value[gen_key] == NULL || dist_from_key >= H->probe_limit) break;     // Non-existent key
         }
     }    // fprintf(stderr, "<Hash.h>: illegal key lookup of non-existent or deleted key %d\n", key);
     return INT_MIN;

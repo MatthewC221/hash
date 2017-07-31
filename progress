@@ -33,3 +33,8 @@
 - Adding open addr (put, free, createHash)
 - Added some testing
 - Completed some manual tests with valgrind
+
+31/7/17
+- Official collision tests
+- Read "https://probablydance.com/2017/02/26/i-wrote-the-fastest-hashtable/" about a fast table. Uses limit on probe count and robin hood hashing
+- Decided to implement probe count, which have included

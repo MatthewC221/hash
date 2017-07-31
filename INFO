@@ -13,6 +13,9 @@ Timing tests
 time_insert.c, time_insert.py (C and Py equivalents of putting)
 handler.pl = tests the two above
 
+collision_speed.c (Collsion timing tests)
+collision_tester.pl = tests collision_speed.c
+
 DOCUMENTATION
 
 INFO = this DOC

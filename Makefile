@@ -1,4 +1,4 @@
-all: test unit_pg collision resize time_resize lf_test open_addr
+all: test unit_pg collision resize time_resize lf_test open_addr collision_speed
 
 test: test.c hash.h
 	gcc -o test test.c -lm -g
@@ -20,3 +20,6 @@ lf_test: lf_test.c hash.h
 
 open_addr: open_addr.c hash.h
 	gcc -o open_addr open_addr.c -lm -g 
+
+collision_speed: collision_speed.c hash.h
+	gcc -o collision_speed collision_speed.c -lm -g
