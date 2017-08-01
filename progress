@@ -38,3 +38,9 @@
 - Official collision tests
 - Read "https://probablydance.com/2017/02/26/i-wrote-the-fastest-hashtable/" about a fast table. Uses limit on probe count and robin hood hashing
 - Decided to implement probe count, which have included
+
+1/8/17
+- Robin hood hashing included
+- Competing against g_hash_table in C as well
+- Current status: open addr very close to Python dict. with size init. much faster
+				  open addr = 1/2 speed of g_hash_table!!! Reading about macros and full-on optimizations
