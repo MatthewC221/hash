@@ -44,3 +44,5 @@
 - Competing against g_hash_table in C as well
 - Current status: open addr very close to Python dict. with size init. much faster
 				  open addr = 1/2 speed of g_hash_table!!! Reading about macros and full-on optimizations
+- started doing perf profiling (kcachegrind and valgrind --tool=callgrind). E.g kcachegrind callgrind.out.*, etc
+
