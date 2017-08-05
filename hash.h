@@ -5,6 +5,7 @@
 #include <limits.h>
 #include <stdarg.h>
 #include <assert.h>
+#include <string.h>
 
 #ifndef _hash_h
 #define _hash_h
@@ -60,7 +61,7 @@ k_v * createKV(int cur_key, int cur_value, int dist);
 int_node * createNode(int cur_key, int cur_value);
 void resize(Hash * H);
 Hash * copyHashCollision(Hash * H);
-Hash * copyHashOpen(Hash * H);
+k_v ** copyHashOpen(Hash * H);
 void free_hash(Hash * H);
 void del(Hash * H, int key);
 void printHash(Hash * H);
@@ -73,6 +74,14 @@ int prime_size[20] = {
     6421, 12853, 25717, 51437, 102877,
     205759, 411527, 823117, 1646237, 3292489
 };
+
+int log_prime[20] = {
+    3, 4, 5, 6, 7,
+    8, 9, 10, 11, 12,
+    13, 14, 15, 16, 17,
+    18, 19, 20, 21, 22
+};
+
 
 void set_lf (Hash * H, double new_load)
 {
@@ -112,9 +121,10 @@ Hash * createHash(int elements, ...)
         }
     }   
 
-    for (int i = 0; i < PRIME; i++) {
-        if (prime_size[i] >= starting_size) {
-            starting_size = prime_size[i];
+    int index = 0;
+    for (; index < PRIME; index++) {
+        if (prime_size[index] >= starting_size) {
+            starting_size = prime_size[index];
             break;
         }
     }
@@ -134,7 +144,7 @@ Hash * createHash(int elements, ...)
         for (int i = 0; i < starting_size; i++) {
             new_hash->key_value[i] = NULL;
         }
-        new_hash->probe_limit = log2(starting_size);
+        new_hash->probe_limit = log_prime[index];
     }
 
     new_hash->type = type;                  // Collision / open addr
@@ -156,6 +166,7 @@ void put (Hash * H, int cur_key, int cur_value)
     
     if (cur_key < 0) cur_key = cur_key * -1;
     if (cur_key) gen_key = (cur_key - (cur_key / H->cur_size) * H->cur_size); 
+
     // #### Collision put ####
     if (H->type == COLLISION) {
         int_node * tmp = H->K[gen_key]; 
@@ -190,8 +201,7 @@ void put (Hash * H, int cur_key, int cur_value)
             // Inserting new key
             if (!H->key_value[gen_key] || (H->key_value[gen_key]->k == INT_MIN)) {
                 H->num_elem++;
-                k_v * new_N = createKV(cur_key, cur_value, dist_from_key);
-                H->key_value[gen_key] = new_N;
+                H->key_value[gen_key] = createKV(cur_key, cur_value, dist_from_key);
                 break;
             // Overwriting key
             } else if (H->key_value[gen_key] && (H->key_value[gen_key]->k == cur_key)) {
@@ -209,9 +219,9 @@ void put (Hash * H, int cur_key, int cur_value)
                 int tmp_v = H->key_value[gen_key]->v;
                 int tmp_dist = H->key_value[gen_key]->distance;
 
-                H->key_value[gen_key]->k = cur_key;
-                H->key_value[gen_key]->v = cur_value;
-                H->key_value[gen_key]->distance = dist_from_key;
+                free(H->key_value[gen_key]);
+                
+                H->key_value[gen_key] = createKV(cur_key, cur_value, dist_from_key);
 
                 cur_key = tmp_k;
                 cur_value = tmp_v;
@@ -292,19 +302,19 @@ void resize (Hash * H)
             break;
         }
     }
-    /*
-    printf("----------\nNew hash size = %d\n", new_size);
-    printf("Current %sLF%s = %s%.2f%s\n", YELLOW, END, YELLOW, H->load_factor, END);
-    printf("Nodes / Size = %s%d%s / %s%d%s\n----------\n", RED, H->num_elem, END, GREEN, H->cur_size, END);
-    */
 
-    int old_size = H->cur_size;    
+    int old_size = H->cur_size;  
+    int old_elem = H->num_elem;
+
     Hash * copy_H = NULL;
+    k_v ** copy = NULL;
+
+    // FASTER FOR MANY COLLISIONS, copyHashOpen, faster for not many collisions, current int *
 
     if (H->type == COLLISION) {
         copy_H = copyHashCollision(H);
     } else {
-        copy_H = copyHashOpen(H);
+        copy = copyHashOpen(H);
     }
 
     H->num_elem = 0;
@@ -343,6 +353,21 @@ void resize (Hash * H)
 
     } else if (H->type == OPEN_ADDR) {
         // Free the nodes first
+
+        /*
+        int * keys = (int *)malloc(sizeof(int) * old_elem);
+        int * vals = (int *)malloc(sizeof(int) * old_elem);
+
+        int count = 0;
+        for (int i = 0; i < old_size; i++) {
+            if (H->key_value[i] && H->key_value[i]->k != INT_MIN) {
+                keys[count] = H->key_value[i]->k;
+                vals[count] = H->key_value[i]->v;
+                count++;
+            }
+        }
+        */
+    
         for (int i = 0; i < old_size; i++) {
             if (H->key_value[i]) {
                 free(H->key_value[i]);
@@ -350,20 +375,21 @@ void resize (Hash * H)
             H->key_value[i] = NULL;
         }
 
+
         H->key_value = (k_v **)realloc(H->key_value, sizeof(struct k_v) * new_size);
 
         for (int i = old_size; i < new_size; i++) H->key_value[i] = NULL;
 
-        for (int i = 0; i < copy_H->cur_size; i++) {
-            if (copy_H->key_value[i]) {
-                int key = copy_H->key_value[i]->k;
-                int val = copy_H->key_value[i]->v;
-                put(H, key, val);
-            }
+        for (int i = 0; i < old_elem; i++) {
+            put(H, copy[i]->k, copy[i]->v);
+            free(copy[i]);
         }
 
-        H->probe_limit = log2(H->cur_size);
-        free_hash(copy_H);
+        //free(keys);
+        //free(vals);
+
+        H->probe_limit++;
+        free(copy);
     }
     
     return;
@@ -400,25 +426,23 @@ Hash * copyHashCollision(Hash * H)
 }
 
 //** Works with resize, copies open_addr hash
-Hash * copyHashOpen(Hash * H) 
+k_v ** copyHashOpen(Hash * H) 
 {
-    Hash * new_H = createHash(2, H->cur_size, 2);
+    // Hash * new_H = createHash(2, H->cur_size, 2);
 
-    new_H->num_elem = INT_MIN;
+    k_v ** copy = (k_v **)malloc(sizeof(struct k_v) * H->num_elem);
+
+    int count = 0;
+
     for (int i = 0; i < H->cur_size; i++) {
         // Requires a deep copy
         if (H->key_value[i] && H->key_value[i]->k != INT_MIN) {
-            int key = H->key_value[i]->k;
-            int val = H->key_value[i]->v;
-            int dist = H->key_value[i]->distance;
-            k_v * tmp = createKV(key, val, dist);
-            new_H->key_value[i] = tmp;
-        } else {
-            new_H->key_value[i] = NULL;
-        }
+            k_v * node = createKV(H->key_value[i]->k, H->key_value[i]->v, 0);
+            copy[count++] = node;
+        } 
     }
 
-    return new_H;
+    return copy;
 }
 
 //** Calculates load factor

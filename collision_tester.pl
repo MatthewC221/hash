@@ -30,5 +30,12 @@ for ($start = 10; $start <= $max; $start = $start * 10) {
     printf("------------\n");
 }
 
-
+printf("### Running timing tests for G_HASH_TABLE ###\n");
+for ($start = 10; $start <= $max; $start = $start * 10) {
+    my $start_time = time();
+    $tmp_string = "./test $start";
+    system($tmp_string);
+    printf("Time elapsed for $start inserts:%.2f\n", time() - $start_time);
+    printf("------------\n");
+}
 # printf("### Running timing tests for ")

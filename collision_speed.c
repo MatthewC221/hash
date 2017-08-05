@@ -14,23 +14,24 @@ int main(int argc, char *argv[])
 		int type = atoi(argv[3]);
 		Hash * H = createHash(2, size, type);
 
+		// Should be inserts * 3
 		int range = inserts * 3;
 
-		int * keys = malloc(sizeof(int) * inserts);
+		//int * keys = malloc(sizeof(int) * inserts);
 
 		for (int i = 0; i < inserts; i++) {
 			int r = rand() % range;
 			put(H, r, 1);
-			keys[i] = r;
+		//	keys[i] = r;
 		}
 
+		/*
 		for (int i = 0; i < inserts; i++) {
 			assert(1 == get(H, keys[i]));
 		}
-
-		printf("Number of elements = %d, total size = %d\n", H->num_elem, H->cur_size);
+		*/
 		free_hash(H);
-		free(keys);
+		// free(keys);
 
 	} else {
 		fprintf(stderr, "Usage ./collision_speed <size_of_hash> <num_elem> <type>\n");
