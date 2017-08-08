@@ -65,6 +65,8 @@ k_v ** copyHashOpen(Hash * H);
 void free_hash(Hash * H);
 void del(Hash * H, int key);
 void printHash(Hash * H);
+void swap(k_v ** tmp1, k_v ** tmp2);
+unsigned int overwriteKey(Hash * H, int key, int val, int gen_key);
 // Function decl
 
 // Precomputed hash sizes
@@ -165,7 +167,10 @@ void put (Hash * H, int cur_key, int cur_value)
     int gen_key = 0;
     
     if (cur_key < 0) cur_key = cur_key * -1;
-    if (cur_key) gen_key = (cur_key - (cur_key / H->cur_size) * H->cur_size); 
+    if (cur_key) gen_key = cur_key % H->cur_size;
+
+    // If overwritten, don't look for it
+    // if (overwriteKey(H, cur_key, cur_value, gen_key)) return;
 
     // #### Collision put ####
     if (H->type == COLLISION) {
@@ -193,19 +198,21 @@ void put (Hash * H, int cur_key, int cur_value)
 
     // #### Open addressing put ####
     } else if (H->type == OPEN_ADDR) {
-        // Linear probing once around for a spot
-        int saved = gen_key;    
+        // Linear probing once around for a spot  
         int dist_from_key = 0; 
+        k_v * new_node = createKV(cur_key, cur_value, 0);
 
         while (1) {
             // Inserting new key
             if (!H->key_value[gen_key] || (H->key_value[gen_key]->k == INT_MIN)) {
                 H->num_elem++;
-                H->key_value[gen_key] = createKV(cur_key, cur_value, dist_from_key);
+                new_node->distance = dist_from_key;
+                H->key_value[gen_key] = new_node;
                 break;
             // Overwriting key
             } else if (H->key_value[gen_key] && (H->key_value[gen_key]->k == cur_key)) {
                 H->key_value[gen_key]->v = cur_value;
+                free(new_node);
                 break;
             }
 
@@ -213,23 +220,23 @@ void put (Hash * H, int cur_key, int cur_value)
 
             // If the distance of the current key has probed less, swap and insert the curr key
             // now that the new key is inserted
+
+            
             if (H->key_value[gen_key]->distance < dist_from_key) {
 
-                int tmp_k = H->key_value[gen_key]->k;
-                int tmp_v = H->key_value[gen_key]->v;
-                int tmp_dist = H->key_value[gen_key]->distance;
+                swap(&H->key_value[gen_key], &new_node);
 
-                free(H->key_value[gen_key]);
-                
-                H->key_value[gen_key] = createKV(cur_key, cur_value, dist_from_key);
+                // Copy over the distance
+                H->key_value[gen_key]->distance = dist_from_key;
 
-                cur_key = tmp_k;
-                cur_value = tmp_v;
-                dist_from_key = tmp_dist;
-                gen_key = tmp_k % H->cur_size;
+                cur_key = new_node->k;
+                cur_value = new_node->v;
+                dist_from_key = new_node->distance;
+                gen_key = cur_key % H->cur_size;
             }
+            
             // Can increment anyway, if keys are swapped the spot is full
-
+            
             gen_key++;
             dist_from_key++;    
 
@@ -240,7 +247,7 @@ void put (Hash * H, int cur_key, int cur_value)
             
             if (dist_from_key >= H->probe_limit) {
                 resize(H);
-                gen_key = (cur_key - (cur_key / H->cur_size) * H->cur_size); 
+                gen_key = cur_key % H->cur_size; 
             }
             
 
@@ -253,6 +260,35 @@ void put (Hash * H, int cur_key, int cur_value)
     if (H->num_elem >= H->to_resize) resize(H); 
 
     return;
+}
+
+void swap(k_v ** tmp1, k_v ** tmp2) 
+{
+    k_v * tmp = *tmp1; 
+    *tmp1 = *tmp2;
+    *tmp2 = tmp;
+}
+
+
+//** Attempts an overwrite, if no key present return 0
+unsigned int overwriteKey(Hash * H, int key, int val, int gen_key)
+{
+
+    unsigned int count = 0;
+    for (; count < H->probe_limit; count++, gen_key++) {
+        if (H->key_value[gen_key] && H->key_value[gen_key]->k == key) {
+            H->key_value[gen_key]->v = val;
+            return 1;
+        } else if (H->key_value[gen_key] == NULL) {
+            break;
+        }
+
+        if (gen_key >= H->cur_size - 1) {
+            gen_key = 0;
+        }
+    }
+
+    return 0;
 }
 
 //** Prints all indexes and elements of the hash
