@@ -199,19 +199,17 @@ void put (Hash * H, int cur_key, int cur_value)
     // #### Open addressing put ####
     } else if (H->type == OPEN_ADDR) {
         // Linear probing once around for a spot  
-        int dist_from_key = 0; 
         k_v * new_node = createKV(cur_key, cur_value, 0);
 
         while (1) {
             // Inserting new key
             if (!H->key_value[gen_key] || (H->key_value[gen_key]->k == INT_MIN)) {
                 H->num_elem++;
-                new_node->distance = dist_from_key;
                 H->key_value[gen_key] = new_node;
                 break;
             // Overwriting key
-            } else if (H->key_value[gen_key] && (H->key_value[gen_key]->k == cur_key)) {
-                H->key_value[gen_key]->v = cur_value;
+            } else if (H->key_value[gen_key] && (H->key_value[gen_key]->k == new_node->k)) {
+                H->key_value[gen_key]->v = new_node->v;
                 free(new_node);
                 break;
             }
@@ -222,37 +220,26 @@ void put (Hash * H, int cur_key, int cur_value)
             // now that the new key is inserted
 
             
-            if (H->key_value[gen_key]->distance < dist_from_key) {
-
+            if (H->key_value[gen_key]->distance < new_node->distance) {
                 swap(&H->key_value[gen_key], &new_node);
-
-                // Copy over the distance
-                H->key_value[gen_key]->distance = dist_from_key;
-
-                cur_key = new_node->k;
-                cur_value = new_node->v;
-                dist_from_key = new_node->distance;
                 gen_key = cur_key % H->cur_size;
+                // Don't increment distance until next check
+                new_node->distance--;
             }
             
             // Can increment anyway, if keys are swapped the spot is full
             
             gen_key++;
-            dist_from_key++;    
+            new_node->distance++;  
 
             if (gen_key >= H->cur_size) gen_key = 0;
 
             // If we reach the probe limit, resize the hash
-
             
-            if (dist_from_key >= H->probe_limit) {
+            if (new_node->distance >= H->probe_limit) {
                 resize(H);
-                gen_key = cur_key % H->cur_size; 
+                gen_key = new_node->k % H->cur_size; 
             }
-            
-
-        
-
         }
 
     }
@@ -317,7 +304,7 @@ void printHash (Hash * H)
         for (int i = 0; i < H->cur_size; i++) {
             printf("[%s%d%s] : ", YELLOW, i, END);
             if (H->key_value[i] && H->key_value[i]->k != INT_MIN) {
-                printf("(%d:%d)\n", H->key_value[i]->k, H->key_value[i]->v);
+                printf("(%d:%d) d=%d\n", H->key_value[i]->k, H->key_value[i]->v, H->key_value[i]->distance);
             } else {
                 printf("\n");
             } 

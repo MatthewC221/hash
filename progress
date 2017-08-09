@@ -46,3 +46,7 @@
 				  open addr = 1/2 speed of g_hash_table!!! Reading about macros and full-on optimizations
 - started doing perf profiling (kcachegrind and valgrind --tool=callgrind). E.g kcachegrind callgrind.out.*, etc
 
+1/8/17 - 9/8/17
+- Optimising well, swapping pointers, precomputing
+- For collisions getting close to g_hash_table (~0.52 for 1000000 inserts vs ~0.33 for 1000000 inserts)
+- HOWEVER, there was an assertion that didn't go right, I couldn't get it to fire off after many tries, this needs a look into

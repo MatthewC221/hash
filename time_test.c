@@ -43,7 +43,6 @@ int main(int argc, char *argv[])
                 del(H, i);
             }
         }
-
         free_hash(H);
 
     } else {
