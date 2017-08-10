@@ -91,6 +91,13 @@ int log_prime[20] = {
     18, 19, 20, 21, 22
 };
 
+int resize_default[20] = {
+    3, 8, 17, 35, 72,
+    147, 297, 597, 1197, 2402,
+    4815, 9639, 19287, 38577, 77157,
+    154319, 308645, 617337, 1234677, 2469366
+};
+
 
 void set_lf (Hash * H, double new_load)
 {
@@ -161,7 +168,7 @@ Hash * createHash(int elements, ...)
     new_hash->num_elem = 0;
     new_hash->load_factor = DEFAULT_LF;           // Default load factor (change at 0.75 = N / size)
     
-    new_hash->to_resize = new_hash->cur_size * new_hash->load_factor;
+    new_hash->to_resize = resize_default[index];
     
     return new_hash;
 }
@@ -172,7 +179,6 @@ Hash * createHash(int elements, ...)
 void put (Hash * H, int cur_key, int cur_value) 
 {
     int gen_key = 0;
-    
     if (cur_key < 0) cur_key = cur_key * -1;
     gen_key = cur_key % H->cur_size;
 
@@ -326,10 +332,11 @@ void resize (Hash * H)
     
     int new_size = -1;
     int tmp = H->cur_size * 2;
+    int index = 0;
 
-    for (int i = 0; i < PRIME; i++) {
-        if (prime_size[i] >= tmp) {
-            new_size = prime_size[i];
+    for (; index < PRIME; index++) {
+        if (prime_size[index] >= tmp) {
+            new_size = prime_size[index];
             break;
         }
     }
@@ -344,13 +351,11 @@ void resize (Hash * H)
 
     if (H->type == COLLISION) {
         copy_H = copyHashCollision(H);
-    } else {
-    //    copy = copyHashOpen(H);
-    }
+    } 
 
     H->num_elem = 0;
     H->cur_size = new_size;
-    H->to_resize = new_size * H->load_factor; 
+    H->to_resize = resize_default[index];
         
     if (H->type == COLLISION) {          
         // Free the nodes first
@@ -385,23 +390,22 @@ void resize (Hash * H)
     } else if (H->type == OPEN_ADDR) {
         // Free the nodes first
 
-        
-        int * keys = (int *)malloc(SIZE_int * old_elem);
-        int * vals = (int *)malloc(SIZE_int * old_elem);
+        int *keys = (int *)malloc(SIZE_int * old_elem);
+        int *vals = (int *)malloc(SIZE_int * old_elem);
+
+        H->key_value = (k_v **)realloc(H->key_value, SIZE_kv * new_size);
+
+        // if (H->key_value == NULL) exit(0);
 
         int count = 0;
         for (int i = 0; i < old_size; i++) {
             if (H->key_value[i] && H->key_value[i]->k != INT_MIN) {
                 keys[count] = H->key_value[i]->k;
-                vals[count] = H->key_value[i]->v;
+                vals[count++] = H->key_value[i]->v;
                 free(H->key_value[i]);
-                H->key_value[i] = NULL;
-                count++;
             }
+            H->key_value[i] = NULL;
         }
-
-        H->key_value = (k_v **)realloc(H->key_value, SIZE_kv * new_size);
-
         for (int i = old_size; i < new_size; i++) H->key_value[i] = NULL;
 
         for (int i = 0; i < old_elem; i++) {
@@ -590,7 +594,7 @@ int get(Hash * H, int key)
 
     // Turn negative keys positive
     if (key < 0) key = key * -1;
-    if (key) gen_key = (key - (key / H->cur_size) * H->cur_size);
+    gen_key = key % H->cur_size;
 
     if (H->type == COLLISION) {
         int_node * lookup = H->K[gen_key];
