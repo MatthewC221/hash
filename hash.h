@@ -156,10 +156,12 @@ Hash * createHash(int elements, ...)
         }
     // For open addr, create array of tuples
     } else {
-        new_hash->key_value = (k_v **)malloc(starting_size * SIZE_kv);
+        new_hash->key_value = (k_v **)calloc(starting_size, SIZE_kv);
+        /*)
         for (int i = 0; i < starting_size; i++) {
             new_hash->key_value[i] = NULL;
         }
+        */
         new_hash->probe_limit = log_prime[index];
     }
 
@@ -231,25 +233,20 @@ void put (Hash * H, int cur_key, int cur_value)
             // Robin hood hashing
 
             // If the distance of the current key has probed less, swap and insert the curr key
-            // now that the new key is inserted
-
-            
+            // now that the new key is inserted       
             if (H->key_value[gen_key]->distance < new_node->distance) {
                 swap(&H->key_value[gen_key], &new_node);
                 gen_key = cur_key % H->cur_size;
                 // Don't increment distance until next check
                 new_node->distance--;
             }
-            
             // Can increment anyway, if keys are swapped the spot is full
-            
             gen_key++;
             new_node->distance++;  
 
             if (gen_key >= H->cur_size) gen_key = 0;
 
             // If we reach the probe limit, resize the hash
-            
             if (new_node->distance >= H->probe_limit) {
                 resize(H);
                 gen_key = new_node->k % H->cur_size; 
