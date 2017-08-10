@@ -18,6 +18,13 @@
 #define COLLISION 1
 #define OPEN_ADDR 2
 
+#define SIZE_kv sizeof(struct k_v)
+#define SIZE_hash sizeof(struct Hash)
+#define SIZE_int_node sizeof(struct int_node)
+#define SIZE_int sizeof(int)
+
+#define DEFAULT_LF 0.75
+
 // Allow string hash as well
 // Hash * createHash(int size);
 int isPrime(int num);
@@ -132,7 +139,7 @@ Hash * createHash(int elements, ...)
     }
     // printf("%sHash%s created: init size = %s%d%s\n", RED, END, GREEN, starting_size, END);
     
-    Hash * new_hash = (Hash *)malloc(sizeof(struct Hash));
+    Hash * new_hash = (Hash *)malloc(SIZE_hash);
     
     // For collision, create the array of LL
     if (type == COLLISION) {
@@ -142,7 +149,7 @@ Hash * createHash(int elements, ...)
         }
     // For open addr, create array of tuples
     } else {
-        new_hash->key_value = (k_v **)malloc(starting_size * sizeof(struct k_v));
+        new_hash->key_value = (k_v **)malloc(starting_size * SIZE_kv);
         for (int i = 0; i < starting_size; i++) {
             new_hash->key_value[i] = NULL;
         }
@@ -152,7 +159,7 @@ Hash * createHash(int elements, ...)
     new_hash->type = type;                  // Collision / open addr
     new_hash->cur_size = starting_size;
     new_hash->num_elem = 0;
-    new_hash->load_factor = 0.75;           // Default load factor (change at 0.75 = N / size)
+    new_hash->load_factor = DEFAULT_LF;           // Default load factor (change at 0.75 = N / size)
     
     new_hash->to_resize = new_hash->cur_size * new_hash->load_factor;
     
@@ -167,7 +174,7 @@ void put (Hash * H, int cur_key, int cur_value)
     int gen_key = 0;
     
     if (cur_key < 0) cur_key = cur_key * -1;
-    if (cur_key) gen_key = cur_key % H->cur_size;
+    gen_key = cur_key % H->cur_size;
 
     // If overwritten, don't look for it
     // if (overwriteKey(H, cur_key, cur_value, gen_key)) return;
@@ -208,10 +215,11 @@ void put (Hash * H, int cur_key, int cur_value)
                 H->key_value[gen_key] = new_node;
                 break;
             // Overwriting key
-            } else if (H->key_value[gen_key] && (H->key_value[gen_key]->k == new_node->k)) {
-                H->key_value[gen_key]->v = new_node->v;
+            } else if (H->key_value[gen_key]->k == new_node->k) {
+                // H->key_value[gen_key]->v = new_node->v;
+                swap(&H->key_value[gen_key], &new_node);
                 free(new_node);
-                break;
+                return;
             }
 
             // Robin hood hashing
@@ -337,7 +345,7 @@ void resize (Hash * H)
     if (H->type == COLLISION) {
         copy_H = copyHashCollision(H);
     } else {
-        copy = copyHashOpen(H);
+    //    copy = copyHashOpen(H);
     }
 
     H->num_elem = 0;
@@ -377,42 +385,33 @@ void resize (Hash * H)
     } else if (H->type == OPEN_ADDR) {
         // Free the nodes first
 
-        /*
-        int * keys = (int *)malloc(sizeof(int) * old_elem);
-        int * vals = (int *)malloc(sizeof(int) * old_elem);
+        
+        int * keys = (int *)malloc(SIZE_int * old_elem);
+        int * vals = (int *)malloc(SIZE_int * old_elem);
 
         int count = 0;
         for (int i = 0; i < old_size; i++) {
             if (H->key_value[i] && H->key_value[i]->k != INT_MIN) {
                 keys[count] = H->key_value[i]->k;
                 vals[count] = H->key_value[i]->v;
+                free(H->key_value[i]);
+                H->key_value[i] = NULL;
                 count++;
             }
         }
-        */
-    
-        for (int i = 0; i < old_size; i++) {
-            if (H->key_value[i]) {
-                free(H->key_value[i]);
-            }
-            H->key_value[i] = NULL;
-        }
 
-
-        H->key_value = (k_v **)realloc(H->key_value, sizeof(struct k_v) * new_size);
+        H->key_value = (k_v **)realloc(H->key_value, SIZE_kv * new_size);
 
         for (int i = old_size; i < new_size; i++) H->key_value[i] = NULL;
 
         for (int i = 0; i < old_elem; i++) {
-            put(H, copy[i]->k, copy[i]->v);
-            free(copy[i]);
+            put(H, keys[i], vals[i]);
         }
 
-        //free(keys);
-        //free(vals);
+        free(keys);
+        free(vals);
 
         H->probe_limit++;
-        free(copy);
     }
     
     return;
@@ -453,7 +452,7 @@ k_v ** copyHashOpen(Hash * H)
 {
     // Hash * new_H = createHash(2, H->cur_size, 2);
 
-    k_v ** copy = (k_v **)malloc(sizeof(struct k_v) * H->num_elem);
+    k_v ** copy = (k_v **)malloc(SIZE_kv * H->num_elem);
 
     int count = 0;
 
@@ -633,7 +632,7 @@ int_node * createNode(int cur_key, int cur_value)
 //** Creates a node for open addressing
 k_v * createKV(int cur_key, int cur_value, int dist)
 {
-    k_v * N = (k_v *)malloc(sizeof(struct k_v));
+    k_v * N = (k_v *)malloc(SIZE_kv);
     N->k = cur_key;
     N->v = cur_value;
     N->distance = dist;

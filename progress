@@ -50,3 +50,9 @@
 - Optimising well, swapping pointers, precomputing
 - For collisions getting close to g_hash_table (~0.52 for 1000000 inserts vs ~0.33 for 1000000 inserts)
 - HOWEVER, there was an assertion that didn't go right, I couldn't get it to fire off after many tries, this needs a look into
+
+10/8/17
+- Milestone moment: faster put than Python dict!!!
+- Getting closer to g_hash_table ~0.50
+- Optimised some loops, doing less cond check in put. NOTE: I've primarily been working on open addr for a while
+- #defined some vars like sizeof(int)
