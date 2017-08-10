@@ -68,6 +68,9 @@ k_v * createKV(int cur_key, int cur_value, int dist);
 int_node * createNode(int cur_key, int cur_value);
 void resize(Hash * H);
 Hash * copyHashCollision(Hash * H);
+void swap_Hash(Hash ** tmp1, Hash ** tmp2);
+
+void resize_OPEN(Hash ** H);
 k_v ** copyHashOpen(Hash * H);
 void free_hash(Hash * H);
 void del(Hash * H, int key);
@@ -157,7 +160,7 @@ Hash * createHash(int elements, ...)
     // For open addr, create array of tuples
     } else {
         new_hash->key_value = (k_v **)calloc(starting_size, SIZE_kv);
-        /*)
+        /*
         for (int i = 0; i < starting_size; i++) {
             new_hash->key_value[i] = NULL;
         }
@@ -255,7 +258,7 @@ void put (Hash * H, int cur_key, int cur_value)
 
     }
 
-    if (H->num_elem >= H->to_resize) resize(H); 
+    if (H->num_elem >= H->to_resize) resize(H);
 
     return;
 }
@@ -323,6 +326,29 @@ void printHash (Hash * H)
     }
 }
 
+/* (TODO) OPTIMISE THE RESIZE! This will be much faster...
+void resize_OPEN(Hash ** H)
+{
+
+    printHash((*H));
+    Hash * new_H = createHash(2, 2 * (*H)->cur_size, 2);
+
+    for (int i = 0; i < (*H)->cur_size; i++) {
+        if ((*H)->key_value[i] && (*H)->key_value[i]->k != INT_MIN) {
+            int k = (*H)->key_value[i]->k;
+            int v = (*H)->key_value[i]->v;
+            put(new_H, k, v);
+        }
+    }
+
+    // free_hash(*H);
+    // free_hash((*H));
+    *H = new_H;
+    // free_hash(*H);
+}
+*/
+
+
 //** Resize the hash, copy over using different indexes?
 void resize (Hash * H) 
 {    
@@ -387,36 +413,44 @@ void resize (Hash * H)
     } else if (H->type == OPEN_ADDR) {
         // Free the nodes first
 
-        int *keys = (int *)malloc(SIZE_int * old_elem);
-        int *vals = (int *)malloc(SIZE_int * old_elem);
+        //int *keys = (int *)malloc(SIZE_int * old_elem);
+        //int *vals = (int *)malloc(SIZE_int * old_elem);
 
-        H->key_value = (k_v **)realloc(H->key_value, SIZE_kv * new_size);
+        Hash * new_H = createHash(2, prime_size[index], 2);
+
+        // H->key_value = (k_v **)realloc(H->key_value, SIZE_kv * new_size);
 
         // if (H->key_value == NULL) exit(0);
 
         int count = 0;
         for (int i = 0; i < old_size; i++) {
             if (H->key_value[i] && H->key_value[i]->k != INT_MIN) {
-                keys[count] = H->key_value[i]->k;
-                vals[count++] = H->key_value[i]->v;
+                int key = H->key_value[i]->k;
+                int val = H->key_value[i]->v;
+                put(new_H, key, val);
                 free(H->key_value[i]);
             }
             H->key_value[i] = NULL;
         }
-        for (int i = old_size; i < new_size; i++) H->key_value[i] = NULL;
 
-        for (int i = 0; i < old_elem; i++) {
-            put(H, keys[i], vals[i]);
-        }
+        free(H->key_value);
+        H->key_value = NULL;
 
-        free(keys);
-        free(vals);
-
+        // TODO!!
+        *H = *new_H;
         H->probe_limit++;
     }
     
     return;
 }
+
+void swap_Hash(Hash ** tmp1, Hash ** tmp2) 
+{
+    Hash* tmp = *tmp1; 
+    *tmp1 = *tmp2;
+    *tmp2 = tmp;
+}
+
 
 //** Works with resize, requires a deep copy of original Hash so our original can realloc
 Hash * copyHashCollision(Hash * H)
