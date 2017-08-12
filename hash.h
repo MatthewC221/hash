@@ -70,7 +70,7 @@ void resize(Hash * H);
 Hash * copyHashCollision(Hash * H);
 void swap_Hash(Hash ** tmp1, Hash ** tmp2);
 
-void resize_OPEN(Hash ** H);
+Hash * resize_OPEN(Hash * old_H);
 k_v ** copyHashOpen(Hash * H);
 void free_hash(Hash * H);
 void del(Hash * H, int key);
@@ -251,14 +251,22 @@ void put (Hash * H, int cur_key, int cur_value)
 
             // If we reach the probe limit, resize the hash
             if (new_node->distance >= H->probe_limit) {
-                resize(H);
+                Hash * new_H = resize_OPEN(H);
+                *H = *new_H;
                 gen_key = new_node->k % H->cur_size; 
             }
         }
 
     }
 
-    if (H->num_elem >= H->to_resize) resize(H);
+    if (H->num_elem >= H->to_resize) {
+        if (H->type == OPEN_ADDR) {
+            Hash * new_H = resize_OPEN(H);
+            *H = *new_H;
+        } else {
+            resize(H);
+        }
+    }
 
     return;
 }
@@ -326,27 +334,28 @@ void printHash (Hash * H)
     }
 }
 
-/* (TODO) OPTIMISE THE RESIZE! This will be much faster...
-void resize_OPEN(Hash ** H)
+// (TODO) OPTIMISE THE RESIZE! This will be much faster...
+Hash * resize_OPEN(Hash * old_H)
 {
 
-    printHash((*H));
-    Hash * new_H = createHash(2, 2 * (*H)->cur_size, 2);
+    Hash * new_H = createHash(2, 2 * old_H ->cur_size, 2);
 
-    for (int i = 0; i < (*H)->cur_size; i++) {
-        if ((*H)->key_value[i] && (*H)->key_value[i]->k != INT_MIN) {
-            int k = (*H)->key_value[i]->k;
-            int v = (*H)->key_value[i]->v;
+    for (int i = 0; i < old_H->cur_size; i++) {
+        if (old_H->key_value[i] && old_H->key_value[i]->k != INT_MIN) {
+            int k = old_H->key_value[i]->k;
+            int v = old_H->key_value[i]->v;
             put(new_H, k, v);
+            free(old_H->key_value[i]);
         }
     }
 
     // free_hash(*H);
-    // free_hash((*H));
-    *H = new_H;
+    free(old_H->key_value);
+    //free(old_H);
+    return new_H;
     // free_hash(*H);
 }
-*/
+
 
 
 //** Resize the hash, copy over using different indexes?
