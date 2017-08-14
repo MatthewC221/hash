@@ -17,7 +17,7 @@ int main(int argc, char *argv[])
 		// Should be inserts * 3
 		int range = inserts * 3;
 
-		//int * keys = malloc(sizeof(int) * inserts);
+		// int * keys = malloc(sizeof(int) * inserts);
 
 		for (int i = 0; i < inserts; i++) {
 			int r = rand() % range;
@@ -27,7 +27,10 @@ int main(int argc, char *argv[])
 
 		/*
 		for (int i = 0; i < inserts; i++) {
-			assert(1 == get(H, keys[i]));
+			if (1 != get(H, keys[i])) {
+				printHash(H);
+				break;
+			}
 		}
 		*/
 		
