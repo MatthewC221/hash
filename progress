@@ -53,6 +53,15 @@
 
 10/8/17
 - Milestone moment: faster put than Python dict!!!
-- Getting closer to g_hash_table ~0.50
+- Getting closer to g_hash_table ~0.50, have broken 0.5 once or twice
 - Optimised some loops, doing less cond check in put. NOTE: I've primarily been working on open addr for a while
 - #defined some vars like sizeof(int)
+
+10/8/17 - cont:
+- Fixed some big bugs that I just made today, mixed up size and num_elem
+- Speed slowed back to ~0.52, but for non-collisions speed is still good
+
+17/8/17 - 21/8/17
+- Fixed my memory leak! Thanks to some good people on SO
+- Experimenting with power of 2 hash, much faster for collision hashing... did some research and seems to be the norm
+- SHOULD FOCUS on completing everything before focusing on speed. String keys, string values, etc!!!
