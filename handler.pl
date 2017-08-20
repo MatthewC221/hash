@@ -10,6 +10,7 @@ use Time::HiRes qw( time );
 
 $max = 1000000;
 
+=pod
 printf("The first timing test to compare my C hash with Python's dictionary.\n");
 printf("Running without checks\n");
 printf("### Running timing tests for time_insert.c COLLISION ###\n");
@@ -20,6 +21,7 @@ for ($start = 10; $start <= $max; $start = $start * 10) {
     printf("Time elapsed for $start inserts:%.2f\n", time() - $start_time);
     printf("------------\n");
 }
+=cut
 
 printf("### Running timing tests for time_insert.c OPEN_ADDR ###\n");
 for ($start = 10; $start <= $max; $start = $start * 10) {
@@ -30,6 +32,7 @@ for ($start = 10; $start <= $max; $start = $start * 10) {
     printf("------------\n");
 }
 
+=pod
 printf("### Running timing tests for time_insert.c COLLISION WITH size initialising ###\n");
 for ($start = 10; $start <= $max; $start = $start * 10) {
     my $start_time = time();
@@ -38,6 +41,7 @@ for ($start = 10; $start <= $max; $start = $start * 10) {
     printf("Time elapsed for $start inserts:%.2f\n", time() - $start_time);
     printf("------------\n");
 }
+=cut
 
 printf("### Running timing tests for time_insert.c OPEN_ADDR WITH size initialising ###\n");
 for ($start = 10; $start <= $max; $start = $start * 10) {
@@ -67,6 +71,7 @@ for ($start = 10; $start <= $max; $start = $start * 10) {
     printf("------------\n");
 }
 
+=pod
 printf("### Running timing tests for time_insert.c COLLISION ###\n");
 for ($start = 10; $start <= $max; $start = $start * 10) {
     my $start_time = time();
@@ -75,6 +80,7 @@ for ($start = 10; $start <= $max; $start = $start * 10) {
     printf("Time elapsed for $start inserts:%.2f\n", time() - $start_time);
     printf("------------\n");
 }
+=cut
 
 printf("### Running timing tests for time_insert.py ###\n");
 for ($start = 10; $start <= $max; $start = $start * 10) {

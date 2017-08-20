@@ -1,4 +1,4 @@
-all: test unit_pg collision resize open_addr collision_speed time_test\
+all: test unit_pg collision resize open_addr collision_speed time_test compute_mod
 
 # lf_test left out
 
@@ -28,6 +28,9 @@ collision_speed: collision_speed.c hash.h hash.c
 
 time_test: time_test.c hash.h hash.c
 	gcc -o time_test time_test.c hash.c -lm -g
+
+compute_mod: compute_mod.c
+	gcc -o compute_mod compute_mod.c  
 
 clean:
 	rm -rf hash.o

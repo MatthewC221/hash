@@ -34,8 +34,9 @@ int main(int argc, char *argv[])
 		}
 		*/
 		
+		
 		free_hash(H);
-		//free(keys);
+		// free(keys);
 
 	} else {
 		fprintf(stderr, "Usage ./collision_speed <size_of_hash> <num_elem> <type>\n");

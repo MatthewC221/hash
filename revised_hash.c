@@ -9,12 +9,32 @@
 #include <assert.h>
 #include <string.h>
 
+/* Experimental version
+ * Uses power of 2 hash and quick modulus computing
+ * Is faster for many collisions occuring
+ *
+ *
+ *
+ *
+ *
+*/
+
+
+
 // Precomputed hash sizes
 int prime_size[20] = {
     5, 11, 23, 47, 97,
     197, 397, 797, 1597, 3203,
     6421, 12853, 25717, 51437, 102877,
     205759, 411527, 823117, 1646237, 3292489
+};
+
+int powers[22] = {
+    2, 4, 8, 16, 32,
+    64, 128, 256, 512, 1024,
+    2048, 4096, 8192, 16384, 32768,
+    65536, 131072, 262144, 524288, 1048576,
+    2097152, 4194304
 };
 
 int log_prime[20] = {
@@ -24,11 +44,11 @@ int log_prime[20] = {
     18, 19, 20, 21, 22
 };
 
-int resize_default[20] = {
-    3, 8, 17, 35, 72,
-    147, 297, 597, 1197, 2402,
-    4815, 9639, 19287, 38577, 77157,
-    154319, 308645, 617337, 1234677, 2469366
+int resize_default[22] = {
+    1, 3, 6, 12, 24, 48, 
+    96, 192, 384, 768, 1536, 
+    3072, 6144, 12288, 24576, 49152, 
+    98304, 196608, 393216, 786432, 1572864, 
 };
 
 
@@ -71,8 +91,9 @@ Hash * createHash(int elements, ...)
 
     int index = 0;
     for (; index < PRIME; index++) {
-        if (prime_size[index] >= starting_size) {
-            starting_size = prime_size[index];
+        // Used to be prime_size[index]
+        if (powers[index] >= starting_size) {
+            starting_size = powers[index];
             break;
         }
     }
@@ -108,7 +129,8 @@ void put (Hash * H, int cur_key, int cur_value)
 {
     int gen_key = 0;
     if (cur_key < 0) cur_key = cur_key * -1;
-    gen_key = cur_key % H->cur_size;
+    // gen_key = cur_key % H->cur_size
+    gen_key = (cur_key & (H->cur_size - 1));
 
     // If overwritten, don't look for it
     // if (overwriteKey(H, cur_key, cur_value, gen_key)) return;
@@ -155,7 +177,7 @@ void put (Hash * H, int cur_key, int cur_value)
                 return;
             }
 
-            // Robin hood hash
+            // Robin hood hashing
 
             // If the distance of the current key has probed less, swap and insert the curr key
             // now that the new key is inserted       
@@ -553,7 +575,8 @@ int get(Hash * H, int key)
 
     // Turn negative keys positive
     if (key < 0) key = key * -1;
-    gen_key = key % H->cur_size;
+    // gen_key = key % H->cur_size;
+    gen_key = (key & (H->cur_size - 1));
 
     if (H->type == COLLISION) {
         int_node * lookup = H->K[gen_key];
