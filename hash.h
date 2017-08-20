@@ -74,7 +74,7 @@ extern void resize(Hash * H);
 extern Hash * copyHashCollision(Hash * H);
 extern void swap_Hash(Hash ** tmp1, Hash ** tmp2);
 
-extern Hash * resize_OPEN(Hash * old_H);
+extern void resize_OPEN(Hash * old_H);
 extern k_v ** copyHashOpen(Hash * H);
 extern void free_hash(Hash * H);
 extern void del(Hash * H, int key);

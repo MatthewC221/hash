@@ -180,8 +180,7 @@ void put (Hash * H, int cur_key, int cur_value)
 
             // If we reach the probe limit, resize the hash
             if (new_node->distance >= H->probe_limit) {
-                Hash * new_H = resize_OPEN(H);
-                *H = *new_H;
+                resize_OPEN(H);
                 gen_key = new_node->k % H->cur_size; 
             }
         }
@@ -190,8 +189,7 @@ void put (Hash * H, int cur_key, int cur_value)
 
     if (H->num_elem >= H->to_resize) {
         if (H->type == OPEN_ADDR) {
-            Hash * new_H = resize_OPEN(H);
-            *H = *new_H;
+            resize_OPEN(H);
         } else {
             resize(H);
         }
@@ -264,7 +262,7 @@ void printHash (Hash * H)
 }
 
 // (TODO) OPTIMISE THE RESIZE! This will be much faster...
-Hash * resize_OPEN(Hash * old_H)
+void resize_OPEN(Hash * old_H)
 {
 
     Hash * new_H = createHash(2, 2 * old_H ->cur_size, 2);
@@ -278,11 +276,9 @@ Hash * resize_OPEN(Hash * old_H)
         }
     }
 
-    // free_hash(*H);
     free(old_H->key_value);
-    //free(old_H);
-    return new_H;
-    // free_hash(*H);
+    *old_H = *new_H;
+    free(new_H);
 }
 
 
