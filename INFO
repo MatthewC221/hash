@@ -1,20 +1,29 @@
 Explaining what each program does
 
-Basic unit tests
+/// Basic unit tests \\\
 
-test.c = basic put and printHash test
-unit_pg.c = unit tests for put and get (can't really test put w/o get)
-collision.c = unit testing put and get w/ collision handling
-resize.c = unit testing for resizing as the table enlarges (load factor = 0.75 DEFAULT)
-open_addr.c = first program with open addressing
+- test.c = basic put and printHash test
+- unit_pg.c = unit tests for put and get (can't really test put w/o get)
+- collision.c = unit testing put and get w/ collision handling
+- resize.c = unit testing for resizing as the table enlarges (load factor = 0.75 DEFAULT)
+- open_addr.c = first program with open addressing
 
-Timing tests
+/// Main tests to look at \\\
 
-time_insert.c, time_insert.py (C and Py equivalents of putting)
-handler.pl = tests the two above
+- time_insert.c, time_insert.py (C and Py equivalents of putting)
+- handler.pl = tests the two above
 
-collision_speed.c (Collsion timing tests)
-collision_tester.pl = tests collision_speed.c
+- collision_speed.c (Collsion timing tests)
+- collision_tester.pl = tests collision_speed.c
+
+/// Speed logs (speeds/) \\\
+
+- logs of ./handler.pl and ./collision_tester.pl results
+
+/// Other \\\
+
+- other files are mostly temporary, e.g. precomputing prints
+- or testing string hash
 
 DOCUMENTATION
 
