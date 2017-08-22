@@ -14,7 +14,7 @@
 #define GREEN "\e[32m"
 #define YELLOW "\e[93m"
 #define END  "\e[0m"                // For end colours
-#define PRIME 20
+#define POW_SIZE 22
 
 #define COLLISION 1
 #define OPEN_ADDR 2
@@ -52,15 +52,11 @@ typedef struct k_v
 
 typedef struct Hash
 {
-
     int_node ** K;          // Collisions
     int cur_size;
-    int num_elem;   
-    
-    k_v ** key_value;       // Open addressing
-           
-    int to_resize;          // Elements to resize
-    
+    int num_elem;    
+    k_v ** key_value;       // Open addressing       
+    int to_resize;          // Elements to resize  
     int probe_limit;
     double load_factor;     
     int type;               // OPEN_ADDR or COLLISION

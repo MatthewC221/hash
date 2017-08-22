@@ -1,15 +1,9 @@
 
 #include "hash.h"
-#include <stdio.h>
-#include <stdlib.h>
-#include <stdbool.h>
-#include <math.h>
-#include <limits.h>
-#include <stdarg.h>
-#include <assert.h>
-#include <string.h>
 
 // Precomputed hash sizes
+
+/*
 int prime_size[20] = {
     5, 11, 23, 47, 97,
     197, 397, 797, 1597, 3203,
@@ -30,7 +24,30 @@ int resize_default[20] = {
     4815, 9639, 19287, 38577, 77157,
     154319, 308645, 617337, 1234677, 2469366
 };
+*/
 
+int powers[22] = {
+    2, 4, 8, 16, 32,
+    64, 128, 256, 512, 1024,
+    2048, 4096, 8192, 16384, 32768,
+    65536, 131072, 262144, 524288, 1048576,
+    2097152, 4194304
+};
+
+int log_prime[22] = {
+    1, 2, 3, 4, 5,
+    6, 7, 8, 9, 10,
+    11, 12, 13, 14, 15,
+    16, 17, 18, 19, 20,
+    21, 22
+};
+
+int resize_default[22] = {
+    1, 3, 6, 12, 24, 48, 
+    96, 192, 384, 768, 1536, 
+    3072, 6144, 12288, 24576, 49152, 
+    98304, 196608, 393216, 786432, 1572864, 
+};
 
 void set_lf (Hash * H, double new_load)
 {
@@ -48,56 +65,50 @@ void set_lf (Hash * H, double new_load)
 Hash * createHash(int elements, ...) 
 {
     va_list arg_list;
-    // Default size
-    int starting_size = 11;
-    
-    // Default collision
-    int type = COLLISION;               
+    int starting_size = 11;     // Default size
+    int type = OPEN_ADDR;       // Default type
     
     if (elements > 2) {
         fprintf(stderr, "<Hash.h>: supplied too many parameters to <Hash.h>: createHash(): max 2\n");
         return NULL;
     }
     
-    va_start (arg_list, elements);
-    
+    va_start (arg_list, elements);  
     for (int i = 0; i < elements; i++) {
         if (i == 0) {
             starting_size = va_arg(arg_list, int);
         } else {
             type = va_arg(arg_list, int);
+            assert(type == 1 || type == 2);
         }
     }   
 
     int index = 0;
-    for (; index < PRIME; index++) {
-        if (prime_size[index] >= starting_size) {
-            starting_size = prime_size[index];
+    for (; index < POW_SIZE; index++) {
+        if (powers[index] >= starting_size) {
+            starting_size = powers[index];
             break;
         }
     }
 
     Hash * new_hash = (Hash *)malloc(SIZE_hash);
+    // if (new_hash == NULL) fprintf(stderr, "Failed to malloc hash.c: line 93\n"); exit(0);
     
-    // For collision, create the array of LL
-    if (type == COLLISION) {
+    if (type == COLLISION) {        // Collision hash
         new_hash->K = (int_node **)malloc(starting_size * sizeof(struct int_node));
         for (int i = 0; i < starting_size; i++) {
             new_hash->K[i] = NULL;
         }
-    // For open addr, create array of tuples
-    } else {
+    } else {                        // Open address hash
         new_hash->key_value = (k_v **)calloc(starting_size, SIZE_kv);
-        new_hash->probe_limit = log_prime[index];
+        // if (!new_hash->key_value) fprintf(stderr, "Failed to create memory from malloc\n"); exit(0);
+        new_hash->probe_limit = index + 1;      // log2(size) = index + 1
     }
-
-    new_hash->type = type;                  // Collision / open addr
+    new_hash->type = type;                        // Collision / open addr
     new_hash->cur_size = starting_size;
     new_hash->num_elem = 0;
-    new_hash->load_factor = DEFAULT_LF;           // Default load factor (change at 0.75 = N / size)
-    
-    new_hash->to_resize = resize_default[index];
-    
+    new_hash->load_factor = DEFAULT_LF;           // Default load factor (change at 0.75 = N / size) 
+    new_hash->to_resize = resize_default[index];             
     return new_hash;
 }
 
@@ -106,10 +117,13 @@ Hash * createHash(int elements, ...)
 // Currently resize AFTER we insert a new node
 void put (Hash * H, int cur_key, int cur_value) 
 {
-    int gen_key = 0;
-    if (cur_key < 0) cur_key = cur_key * -1;
-    gen_key = cur_key % H->cur_size;
-
+    int gen_key = cur_key;
+    if (gen_key < 0) {
+        gen_key = gen_key * -1; 
+        gen_key = gen_key % H->cur_size;
+    } else if (H->cur_size <= cur_key) {
+        gen_key = (cur_key & (H->cur_size - 1));
+    } 
     // If overwritten, don't look for it
     // if (overwriteKey(H, cur_key, cur_value, gen_key)) return;
 
@@ -136,15 +150,13 @@ void put (Hash * H, int cur_key, int cur_value)
             before->next = new_N;
             H->num_elem++;
         }
-
     // #### Open addressing put ####
     } else if (H->type == OPEN_ADDR) {
         // Linear probing once around for a spot  
         k_v * new_node = createKV(cur_key, cur_value, 0);
-
         while (1) {
             // Inserting new key
-            if (!H->key_value[gen_key] || (H->key_value[gen_key]->k == INT_MIN)) {
+            if (H->key_value[gen_key] == NULL || (H->key_value[gen_key]->k == INT_MIN)) {
                 H->num_elem++;
                 H->key_value[gen_key] = new_node;
                 break;
@@ -154,9 +166,7 @@ void put (Hash * H, int cur_key, int cur_value)
                 free(new_node);
                 return;
             }
-
             // Robin hood hash
-
             // If the distance of the current key has probed less, swap and insert the curr key
             // now that the new key is inserted       
             if (H->key_value[gen_key]->distance < new_node->distance) {
@@ -165,22 +175,16 @@ void put (Hash * H, int cur_key, int cur_value)
                 // Don't increment distance until next check
                 new_node->distance--;
             }
-
             gen_key++;
             new_node->distance++;  
 
             if (gen_key >= H->cur_size) gen_key = 0;
-
-            // If we reach the probe limit, resize the hash
-
-            
+            // If we reach the probe limit, resize the hash     
             if (new_node->distance >= H->probe_limit) {
                 resize_OPEN(H);
                 gen_key = new_node->k % H->cur_size; 
             }
-
         }
-
     }
 
     if (H->num_elem >= H->to_resize) {
@@ -278,8 +282,6 @@ void resize_OPEN(Hash * old_H)
     free(new_H);
 }
 
-
-
 //** Resize the hash, copy over using different indexes?
 void resize (Hash * H) 
 {    
@@ -288,9 +290,9 @@ void resize (Hash * H)
     int tmp = H->cur_size * 2;
     int index = 0;
 
-    for (; index < PRIME; index++) {
-        if (prime_size[index] >= tmp) {
-            new_size = prime_size[index];
+    for (; index < POW_SIZE; index++) {
+        if (powers[index] >= tmp) {
+            new_size = powers[index];
             break;
         }
     }
@@ -347,7 +349,7 @@ void resize (Hash * H)
         //int *keys = (int *)malloc(SIZE_int * old_elem);
         //int *vals = (int *)malloc(SIZE_int * old_elem);
 
-        Hash * new_H = createHash(2, prime_size[index], 2);
+        Hash * new_H = createHash(2, powers[index], 2);
 
         // H->key_value = (k_v **)realloc(H->key_value, SIZE_kv * new_size);
 
@@ -476,7 +478,7 @@ void del(Hash * H, int key)
     
     // Don't mod by 0
     if (key < 0) key = key * -1;
-    if (key) gen_key = (key - (key / H->cur_size) * H->cur_size);
+    gen_key = (key & (H->cur_size - 1));
     
     if (H->type == COLLISION) {
         int_node * del_before = H->K[gen_key]; 
@@ -553,7 +555,7 @@ int get(Hash * H, int key)
 
     // Turn negative keys positive
     if (key < 0) key = key * -1;
-    gen_key = key % H->cur_size;
+    gen_key = (key & (H->cur_size - 1));
 
     if (H->type == COLLISION) {
         int_node * lookup = H->K[gen_key];
@@ -599,6 +601,7 @@ k_v * createKV(int cur_key, int cur_value, int dist)
     N->k = cur_key;
     N->v = cur_value;
     N->distance = dist;
+    // if (!N) fprintf(stderr, "Malloc failed hash.c: 605\n"); exit(0);
 
     return N;
 }
