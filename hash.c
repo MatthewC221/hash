@@ -57,15 +57,11 @@ void set_lf (Hash * H, double new_load)
     }
 }
 
-/* Incorporate type later
-// Allow for open addressing/chaining option
-// ** Creates the hash
-// @args: type = open addr vs collision, optional starting_size
-*/
+//** Creates the hash
 Hash * createHash(int elements, ...) 
 {
     va_list arg_list;
-    int starting_size = 8;     // Default size
+    int starting_size = 8;      // Default size
     int type = OPEN_ADDR;       // Default type
     
     if (elements > 2) {
@@ -100,7 +96,7 @@ Hash * createHash(int elements, ...)
             new_hash->K[i] = NULL;
         }
     } else {                        // Open address hash
-        new_hash->key_value = (k_v **)calloc(starting_size, SIZE_kv);
+        new_hash->key_value = (INT_kv **)calloc(starting_size, SIZE_kv);
         // if (!new_hash->key_value) fprintf(stderr, "Failed to create memory from malloc\n"); exit(0);
         new_hash->probe_limit = index + 1;      // log2(size) = index + 1
     }
@@ -113,8 +109,6 @@ Hash * createHash(int elements, ...)
 }
 
 //** Insert element in hash
-
-// Currently resize AFTER we insert a new node
 void put (Hash * H, int cur_key, int cur_value) 
 {
     int gen_key = cur_key;
@@ -147,7 +141,7 @@ void put (Hash * H, int cur_key, int cur_value)
     // #### Open addressing put ####
     } else if (H->type == OPEN_ADDR) {
         // Linear probing once around for a spot  
-        k_v * new_node = createKV(cur_key, cur_value, 0);
+        INT_kv * new_node = createKV(cur_key, cur_value, 0);
         while (1) {
             // Inserting new key
             if (H->key_value[gen_key] == NULL || (H->key_value[gen_key]->k == INT_MIN)) {
@@ -197,10 +191,10 @@ void put (Hash * H, int cur_key, int cur_value)
     return;
 }
 
-
-void swap(k_v ** tmp1, k_v ** tmp2) 
+//** Swap two nodes
+void swap(INT_kv ** tmp1, INT_kv ** tmp2) 
 {
-    k_v * tmp = *tmp1; 
+    INT_kv * tmp = *tmp1; 
     *tmp1 = *tmp2;
     *tmp2 = tmp;
 }
@@ -261,7 +255,7 @@ void printHash (Hash * H)
     }
 }
 
-// (TODO) OPTIMISE THE RESIZE! This will be much faster...
+//** Resizing for open addressing hash
 void resize_OPEN(Hash * old_H)
 {
 
@@ -300,9 +294,7 @@ void resize (Hash * H)
     int old_elem = H->num_elem;
 
     Hash * copy_H = NULL;
-    k_v ** copy = NULL;
-
-    // FASTER FOR MANY COLLISIONS, copyHashOpen, faster for not many collisions, current int *
+    INT_kv ** copy = NULL;
 
     if (H->type == COLLISION) {
         copy_H = copyHashCollision(H);
@@ -342,7 +334,7 @@ void resize (Hash * H)
         }
         free_hash(copy_H);
 
-    } else if (H->type == OPEN_ADDR) {
+    } /*else if (H->type == OPEN_ADDR) {
         // Free the nodes first
 
         //int *keys = (int *)malloc(SIZE_int * old_elem);
@@ -350,7 +342,7 @@ void resize (Hash * H)
 
         Hash * new_H = createHash(2, powers[index], 2);
 
-        // H->key_value = (k_v **)realloc(H->key_value, SIZE_kv * new_size);
+        // H->key_value = (INT_kv **)realloc(H->key_value, SIZE_kv * new_size);
 
         // if (H->key_value == NULL) exit(0);
         int count = 0;
@@ -369,10 +361,12 @@ void resize (Hash * H)
         *H = *new_H;
         H->probe_limit++;
     }
-    
+    */
+
     return;
 }
 
+//** unused
 void swap_Hash(Hash ** tmp1, Hash ** tmp2) 
 {
     Hash* tmp = *tmp1; 
@@ -411,19 +405,19 @@ Hash * copyHashCollision(Hash * H)
     return new_H;
 }
 
-//** Works with resize, copies open_addr hash
-k_v ** copyHashOpen(Hash * H) 
+//** Unused
+INT_kv ** copyHashOpen(Hash * H) 
 {
     // Hash * new_H = createHash(2, H->cur_size, 2);
 
-    k_v ** copy = (k_v **)malloc(SIZE_kv * H->num_elem);
+    INT_kv ** copy = (INT_kv **)malloc(SIZE_kv * H->num_elem);
 
     int count = 0;
 
     for (int i = 0; i < H->cur_size; i++) {
         // Requires a deep copy
         if (H->key_value[i] && H->key_value[i]->k != INT_MIN) {
-            k_v * node = createKV(H->key_value[i]->k, H->key_value[i]->v, 0);
+            INT_kv * node = createKV(H->key_value[i]->k, H->key_value[i]->v, 0);
             copy[count++] = node;
         } 
     }
@@ -431,7 +425,7 @@ k_v ** copyHashOpen(Hash * H)
     return copy;
 }
 
-//** Calculates load factor
+//** Returns the current load factor
 double load_factor(Hash * H) 
 {
     printf("Nodes / size = %d / %d\n", H->num_elem, H->cur_size);
@@ -594,9 +588,9 @@ int_node * createNode(int cur_key, int cur_value)
 }
 
 //** Creates a node for open addressing
-k_v * createKV(int cur_key, int cur_value, int dist)
+INT_kv * createKV(int cur_key, int cur_value, int dist)
 {
-    k_v * N = (k_v *)malloc(SIZE_kv);
+    INT_kv * N = (INT_kv *)malloc(SIZE_kv);
     N->k = cur_key;
     N->v = cur_value;
     N->distance = dist;
