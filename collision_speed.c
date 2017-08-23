@@ -15,7 +15,7 @@ int main(int argc, char *argv[])
 		Hash * H = createHash(2, size, type);
 
 		// Should be inserts * 3
-		int range = inserts * 3;
+		int range = inserts * 3; 
 
 		// int * keys = malloc(sizeof(int) * inserts);
 
@@ -33,7 +33,6 @@ int main(int argc, char *argv[])
 			}
 		}
 		*/
-		
 		
 		free_hash(H);
 		// free(keys);

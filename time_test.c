@@ -30,7 +30,6 @@ int main(int argc, char *argv[])
         for (int i = 0; i < size; i++) {
             put(H, i, 1);
         }
-        
         if (check_flag) {
             for (int i = 0; i < size; i++) {
                 assert(1 == get(H, i));

@@ -65,7 +65,7 @@ void set_lf (Hash * H, double new_load)
 Hash * createHash(int elements, ...) 
 {
     va_list arg_list;
-    int starting_size = 11;     // Default size
+    int starting_size = 8;     // Default size
     int type = OPEN_ADDR;       // Default type
     
     if (elements > 2) {
@@ -118,14 +118,8 @@ Hash * createHash(int elements, ...)
 void put (Hash * H, int cur_key, int cur_value) 
 {
     int gen_key = cur_key;
-    if (gen_key < 0) {
-        gen_key = gen_key * -1; 
-        gen_key = gen_key % H->cur_size;
-    } else if (H->cur_size <= cur_key) {
-        gen_key = (cur_key & (H->cur_size - 1));
-    } 
-    // If overwritten, don't look for it
-    // if (overwriteKey(H, cur_key, cur_value, gen_key)) return;
+    if (gen_key < 0) gen_key *= -1; 
+    if (H->cur_size <= gen_key) gen_key = (cur_key & (H->cur_size - 1));
 
     // #### Collision put ####
     if (H->type == COLLISION) {
@@ -171,7 +165,10 @@ void put (Hash * H, int cur_key, int cur_value)
             // now that the new key is inserted       
             if (H->key_value[gen_key]->distance < new_node->distance) {
                 swap(&H->key_value[gen_key], &new_node);
-                gen_key = cur_key % H->cur_size;
+
+                gen_key = cur_key;
+                if (gen_key < 0) gen_key *= -1;
+                gen_key = (gen_key & (H->cur_size - 1));
                 // Don't increment distance until next check
                 new_node->distance--;
             }
@@ -182,7 +179,9 @@ void put (Hash * H, int cur_key, int cur_value)
             // If we reach the probe limit, resize the hash     
             if (new_node->distance >= H->probe_limit) {
                 resize_OPEN(H);
-                gen_key = new_node->k % H->cur_size; 
+                gen_key = new_node->k;
+                if (gen_key < 0) gen_key *= -1; 
+                gen_key = (gen_key & (H->cur_size - 1));
             }
         }
     }
@@ -554,7 +553,7 @@ int get(Hash * H, int key)
     int gen_key = 0;
 
     // Turn negative keys positive
-    if (key < 0) key = key * -1;
+    if (key < 0) key *= -1;
     gen_key = (key & (H->cur_size - 1));
 
     if (H->type == COLLISION) {
