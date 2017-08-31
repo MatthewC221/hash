@@ -63,19 +63,29 @@ Hash * createHash(int elements, ...)
     va_list arg_list;
     int starting_size = 8;      // Default size
     int type = OPEN_ADDR;       // Default type
-    
-    if (elements > 2) {
+    int k_v_ = 1;           // Default int key, int val
+
+    if (elements > 4) {
         fprintf(stderr, "<Hash.h>: supplied too many parameters to <Hash.h>: createHash(): max 2\n");
         return NULL;
     }
     
+    // Hash * H = createHash(4, starting_size, OPEN_ADDR, INT_k, STR_v)
+
     va_start (arg_list, elements);  
     for (int i = 0; i < elements; i++) {
-        if (i == 0) {
-            starting_size = va_arg(arg_list, int);
-        } else {
-            type = va_arg(arg_list, int);
-            assert(type == 1 || type == 2);
+        switch (i) {
+            case 0:               
+                starting_size = va_arg(arg_list, int);
+                break;
+            case 1:
+                type = va_arg(arg_list, int);
+                assert(type == COLLISION || type == OPEN_ADDR);
+                break;
+            case 2:
+                k_v_ = va_arg(arg_list, int);
+                assert(k_v_ > 0 && k_v_ < 5);
+                break;
         }
     }   
 
@@ -96,20 +106,48 @@ Hash * createHash(int elements, ...)
             new_hash->K[i] = NULL;
         }
     } else {                        // Open address hash
-        new_hash->key_value = (INT_kv **)calloc(starting_size, SIZE_kv);
-        // if (!new_hash->key_value) fprintf(stderr, "Failed to create memory from malloc\n"); exit(0);
+
+        // 4 cases
+        switch (k_v_) {
+            case 1:
+                new_hash->int_k_int_v = (INT_k_INT_v **)calloc(starting_size, SIZE_int_k_int_v);
+                break;       
+            case 2:
+                new_hash->int_k_int_v = (INT_k_INT_v **)calloc(starting_size, SIZE_int_k_int_v);
+                break; 
+            case 3:
+                new_hash->str_k_str_v = (STR_k_STR_v **)calloc(starting_size, SIZE_str_k_str_v);
+                break;                         
+            case 4:
+                new_hash->str_k_int_v = (STR_k_INT_v **)calloc(starting_size, SIZE_str_k_int_v);
+                break;                 
+        }
+        // if (!new_hash->int_k_int_v) fprintf(stderr, "Failed to create memory from malloc\n"); exit(0);
         new_hash->probe_limit = index + 1;      // log2(size) = index + 1
     }
+
     new_hash->type = type;                        // Collision / open addr
     new_hash->cur_size = starting_size;
     new_hash->num_elem = 0;
     new_hash->load_factor = DEFAULT_LF;           // Default load factor (change at 0.75 = N / size) 
-    new_hash->to_resize = resize_default[index];             
+    new_hash->to_resize = resize_default[index];    
+    new_hash->k_v_type = k_v_;
+
     return new_hash;
 }
 
 //** Insert element in hash
-void put (Hash * H, int cur_key, int cur_value) 
+void put(Hash * H, int cur_key, int cur_value) {
+
+
+    switch (H->k_v_type) {
+        case 1:
+            put_INT_k_INT_v(H, cur_key, cur_value);
+            break;
+    }
+}
+
+void put_INT_k_INT_v (Hash * H, int cur_key, int cur_value) 
 {
     int gen_key = cur_key;
     if (gen_key < 0) gen_key *= -1; 
@@ -141,24 +179,24 @@ void put (Hash * H, int cur_key, int cur_value)
     // #### Open addressing put ####
     } else if (H->type == OPEN_ADDR) {
         // Linear probing once around for a spot  
-        INT_kv * new_node = createKV(cur_key, cur_value, 0);
+        INT_k_INT_v * new_node = createKV(cur_key, cur_value, 0);
         while (1) {
             // Inserting new key
-            if (H->key_value[gen_key] == NULL || (H->key_value[gen_key]->k == INT_MIN)) {
+            if (H->int_k_int_v[gen_key] == NULL || (H->int_k_int_v[gen_key]->k == INT_MIN)) {
                 H->num_elem++;
-                H->key_value[gen_key] = new_node;
+                H->int_k_int_v[gen_key] = new_node;
                 break;
             // Overwriting key
-            } else if (H->key_value[gen_key]->k == new_node->k) {
-                swap(&H->key_value[gen_key], &new_node);
+            } else if (H->int_k_int_v[gen_key]->k == new_node->k) {
+                swap(&H->int_k_int_v[gen_key], &new_node);
                 free(new_node);
                 return;
             }
             // Robin hood hash
             // If the distance of the current key has probed less, swap and insert the curr key
             // now that the new key is inserted       
-            if (H->key_value[gen_key]->distance < new_node->distance) {
-                swap(&H->key_value[gen_key], &new_node);
+            if (H->int_k_int_v[gen_key]->distance < new_node->distance) {
+                swap(&H->int_k_int_v[gen_key], &new_node);
 
                 gen_key = cur_key;
                 if (gen_key < 0) gen_key *= -1;
@@ -192,9 +230,9 @@ void put (Hash * H, int cur_key, int cur_value)
 }
 
 //** Swap two nodes
-void swap(INT_kv ** tmp1, INT_kv ** tmp2) 
+void swap(INT_k_INT_v ** tmp1, INT_k_INT_v ** tmp2) 
 {
-    INT_kv * tmp = *tmp1; 
+    INT_k_INT_v * tmp = *tmp1; 
     *tmp1 = *tmp2;
     *tmp2 = tmp;
 }
@@ -206,10 +244,10 @@ unsigned int overwriteKey(Hash * H, int key, int val, int gen_key)
 
     unsigned int count = 0;
     for (; count < H->probe_limit; count++, gen_key++) {
-        if (H->key_value[gen_key] && H->key_value[gen_key]->k == key) {
-            H->key_value[gen_key]->v = val;
+        if (H->int_k_int_v[gen_key] && H->int_k_int_v[gen_key]->k == key) {
+            H->int_k_int_v[gen_key]->v = val;
             return 1;
-        } else if (H->key_value[gen_key] == NULL) {
+        } else if (H->int_k_int_v[gen_key] == NULL) {
             break;
         }
 
@@ -246,8 +284,8 @@ void printHash (Hash * H)
         printf("Open addressing hash\n");
         for (int i = 0; i < H->cur_size; i++) {
             printf("[%s%d%s] : ", YELLOW, i, END);
-            if (H->key_value[i] && H->key_value[i]->k != INT_MIN) {
-                printf("(%d:%d) d=%d\n", H->key_value[i]->k, H->key_value[i]->v, H->key_value[i]->distance);
+            if (H->int_k_int_v[i] && H->int_k_int_v[i]->k != INT_MIN) {
+                printf("(%d:%d) d=%d\n", H->int_k_int_v[i]->k, H->int_k_int_v[i]->v, H->int_k_int_v[i]->distance);
             } else {
                 printf("\n");
             } 
@@ -262,15 +300,15 @@ void resize_OPEN(Hash * old_H)
     Hash * new_H = createHash(2, 2 * old_H ->cur_size, 2);
 
     for (int i = 0; i < old_H->cur_size; i++) {
-        if (old_H->key_value[i] && old_H->key_value[i]->k != INT_MIN) {
-            int k = old_H->key_value[i]->k;
-            int v = old_H->key_value[i]->v;
+        if (old_H->int_k_int_v[i] && old_H->int_k_int_v[i]->k != INT_MIN) {
+            int k = old_H->int_k_int_v[i]->k;
+            int v = old_H->int_k_int_v[i]->v;
             put(new_H, k, v);
-            free(old_H->key_value[i]);
+            free(old_H->int_k_int_v[i]);
         }
     }
 
-    free(old_H->key_value);
+    free(old_H->int_k_int_v);
     *old_H = *new_H;
     free(new_H);
 }
@@ -294,7 +332,7 @@ void resize (Hash * H)
     int old_elem = H->num_elem;
 
     Hash * copy_H = NULL;
-    INT_kv ** copy = NULL;
+    INT_k_INT_v ** copy = NULL;
 
     if (H->type == COLLISION) {
         copy_H = copyHashCollision(H);
@@ -342,20 +380,20 @@ void resize (Hash * H)
 
         Hash * new_H = createHash(2, powers[index], 2);
 
-        // H->key_value = (INT_kv **)realloc(H->key_value, SIZE_kv * new_size);
+        // H->int_k_int_v = (INT_k_INT_v **)realloc(H->int_k_int_v, SIZE_int_k_int_v * new_size);
 
-        // if (H->key_value == NULL) exit(0);
+        // if (H->int_k_int_v == NULL) exit(0);
         int count = 0;
         for (int i = 0; i < old_size; i++) {
-            if (H->key_value[i] && H->key_value[i]->k != INT_MIN) {
-                int key = H->key_value[i]->k;
-                int val = H->key_value[i]->v;
+            if (H->int_k_int_v[i] && H->int_k_int_v[i]->k != INT_MIN) {
+                int key = H->int_k_int_v[i]->k;
+                int val = H->int_k_int_v[i]->v;
                 put(new_H, key, val);
-                free(H->key_value[i]);
+                free(H->int_k_int_v[i]);
             }
-            H->key_value[i] = NULL;
+            H->int_k_int_v[i] = NULL;
         }
-        free(H->key_value);
+        free(H->int_k_int_v);
 
         // TODO!!
         *H = *new_H;
@@ -406,18 +444,18 @@ Hash * copyHashCollision(Hash * H)
 }
 
 //** Unused
-INT_kv ** copyHashOpen(Hash * H) 
+INT_k_INT_v ** copyHashOpen(Hash * H) 
 {
     // Hash * new_H = createHash(2, H->cur_size, 2);
 
-    INT_kv ** copy = (INT_kv **)malloc(SIZE_kv * H->num_elem);
+    INT_k_INT_v ** copy = (INT_k_INT_v **)malloc(SIZE_int_k_int_v * H->num_elem);
 
     int count = 0;
 
     for (int i = 0; i < H->cur_size; i++) {
         // Requires a deep copy
-        if (H->key_value[i] && H->key_value[i]->k != INT_MIN) {
-            INT_kv * node = createKV(H->key_value[i]->k, H->key_value[i]->v, 0);
+        if (H->int_k_int_v[i] && H->int_k_int_v[i]->k != INT_MIN) {
+            INT_k_INT_v * node = createKV(H->int_k_int_v[i]->k, H->int_k_int_v[i]->v, 0);
             copy[count++] = node;
         } 
     }
@@ -453,12 +491,12 @@ void free_hash (Hash * H)
 
     } else if (H->type == OPEN_ADDR) {
         for (int i = 0; i < H->cur_size; i++) {
-            if (H->key_value[i]) {
-                free(H->key_value[i]);
+            if (H->int_k_int_v[i]) {
+                free(H->int_k_int_v[i]);
             }
         }
-        free(H->key_value);
-        H->key_value = NULL;
+        free(H->int_k_int_v);
+        H->int_k_int_v = NULL;
         free(H);
     }
 }
@@ -525,16 +563,16 @@ void del(Hash * H, int key)
         // Search for key
         while (1) {
             // Can't free the node, just set it to a marker (INT_MIN)
-            if (H->key_value[gen_key] && H->key_value[gen_key]->k == key) {
-                H->key_value[gen_key]->k = INT_MIN;
-                H->key_value[gen_key]->v = INT_MIN;
+            if (H->int_k_int_v[gen_key] && H->int_k_int_v[gen_key]->k == key) {
+                H->int_k_int_v[gen_key]->k = INT_MIN;
+                H->int_k_int_v[gen_key]->v = INT_MIN;
                 break;
             }
             gen_key++;
             dist_from_key++;
 
             // Limit for probing exceeded, non existent
-            if (H->key_value[gen_key] == NULL || dist_from_key >= H->probe_limit) break;    
+            if (H->int_k_int_v[gen_key] == NULL || dist_from_key >= H->probe_limit) break;    
             if (gen_key >= H->cur_size) gen_key = 0;
 
         }        
@@ -563,14 +601,14 @@ int get(Hash * H, int key)
         int dist_from_key = 0;
 
         while (1) {
-            if (H->key_value[gen_key] && H->key_value[gen_key]->k == key) {
-                return H->key_value[gen_key]->v;
+            if (H->int_k_int_v[gen_key] && H->int_k_int_v[gen_key]->k == key) {
+                return H->int_k_int_v[gen_key]->v;
             }
             gen_key++;
             dist_from_key++;
 
             if (gen_key >= H->cur_size) gen_key = 0;
-            if (H->key_value[gen_key] == NULL || dist_from_key >= H->probe_limit) break;     // Non-existent key
+            if (H->int_k_int_v[gen_key] == NULL || dist_from_key >= H->probe_limit) break;     // Non-existent key
         }
     }    // fprintf(stderr, "<Hash.h>: illegal key lookup of non-existent or deleted key %d\n", key);
     return INT_MIN;
@@ -588,9 +626,9 @@ int_node * createNode(int cur_key, int cur_value)
 }
 
 //** Creates a node for open addressing
-INT_kv * createKV(int cur_key, int cur_value, int dist)
+INT_k_INT_v * createKV(int cur_key, int cur_value, int dist)
 {
-    INT_kv * N = (INT_kv *)malloc(SIZE_kv);
+    INT_k_INT_v * N = (INT_k_INT_v *)malloc(SIZE_int_k_int_v);
     N->k = cur_key;
     N->v = cur_value;
     N->distance = dist;

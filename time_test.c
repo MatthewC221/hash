@@ -17,7 +17,7 @@ int main(int argc, char *argv[])
         int starting_size = atoi(argv[4]);
         int type = atoi(argv[5]);
 
-        Hash * H = createHash(2, starting_size, type);
+        Hash * H = createHash(3, starting_size, type, INT_KEY_INT_VAL);
 
         /*
         // Optimising 

@@ -12,7 +12,7 @@ int main(int argc, char *argv[])
 		int size = atoi(argv[1]);
 		int inserts = atoi(argv[2]);
 		int type = atoi(argv[3]);
-		Hash * H = createHash(2, size, type);
+		Hash * H = createHash(3, size, type, INT_KEY_INT_VAL);
 
 		// Should be inserts * 3
 		int range = inserts * 3; 
