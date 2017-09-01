@@ -19,9 +19,10 @@ int main(int argc, char *argv[])
 
 		// int * keys = malloc(sizeof(int) * inserts);
 
+		int key = 1;
 		for (int i = 0; i < inserts; i++) {
 			int r = rand() % range;
-			put(H, r, 1);
+			put(H, &r, &key);
 		//	keys[i] = r;
 		}
 

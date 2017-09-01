@@ -26,9 +26,10 @@ int main(int argc, char *argv[])
             return EXIT_FAILURE;
         }        
         */
+        int key = 1;
 
         for (int i = 0; i < size; i++) {
-            put(H, i, 1);
+            put(H, &i, &key);
         }
         if (check_flag) {
             for (int i = 0; i < size; i++) {

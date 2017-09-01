@@ -104,11 +104,13 @@ typedef struct Hash
 } Hash;
 
 // Function decl
-extern INT_k_INT_v * createKV(int cur_key, int cur_value, int dist);
+extern INT_k_INT_v * createINT_k_INT_v(int cur_key, int cur_value, int dist);
+extern INT_k_STR_v * createINT_k_STR_v(int cur_key, char *cur_value, int dist) 
+
 extern int_node * createNode(int cur_key, int cur_value);
 extern Hash * createHash(int elements, ...);
 
-extern void put (Hash * H, int cur_key, int cur_value);
+extern void put (Hash * H, void *cur_key, void *cur_value);
 extern void put_INT_k_INT_v (Hash * H, int cur_key, int cur_value);
 
 extern int get(Hash * H, int key);
