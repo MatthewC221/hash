@@ -122,6 +122,7 @@ extern void resize_OPEN_INT_k_STR_v(Hash * old_H);
 extern unsigned int overwriteKey(Hash * H, int key, int val, int gen_key);
 extern void set_lf (Hash * H, double new_load);
 
+extern void insert(INT_k_INT_v ** KV, int cur_key, int cur_value, int size);
 extern void free_hash(Hash * H);
 extern void printHash(Hash * H);
 extern double load_factor(Hash * H);
