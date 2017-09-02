@@ -213,6 +213,7 @@ void put_INT_k_INT_v (Hash * H, int cur_key, int cur_value)
         if (gen_key >= H->cur_size) gen_key = 0;
         // If we reach the probe limit, resize the hash     
         if (new_node->distance >= H->probe_limit) {
+            printHash(H);
             resize_OPEN_INT_k_INT_v(H);
             gen_key = new_node->k;
             if (gen_key < 0) gen_key *= -1; 
