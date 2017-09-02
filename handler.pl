@@ -23,7 +23,7 @@ for ($start = 10; $start <= $max; $start = $start * 10) {
 }
 =cut
 
-printf("### Running timing tests for time_insert.c OPEN_ADDR ###\n");
+printf("### Running timing tests for time_insert.c OPEN_ADDR DEFAULT ###\n");
 for ($start = 10; $start <= $max; $start = $start * 10) {
     my $start_time = time();
     $tmp_string = "./time_test $start 0 0 5 2 >/dev/null 2>&1";
@@ -31,6 +31,16 @@ for ($start = 10; $start <= $max; $start = $start * 10) {
     printf("Time elapsed for $start inserts:%.2f\n", time() - $start_time);
     printf("------------\n");
 }
+
+printf("### Running timing tests for time_insert.c OPEN_ADDR STRING VALS ###\n");
+for ($start = 10; $start <= $max; $start = $start * 10) {
+    my $start_time = time();
+    $tmp_string = "./time_test_str $start 0 0 5 2 >/dev/null 2>&1";
+    system($tmp_string);
+    printf("Time elapsed for $start inserts:%.2f\n", time() - $start_time);
+    printf("------------\n");
+}
+
 
 =pod
 printf("### Running timing tests for time_insert.c COLLISION WITH size initialising ###\n");

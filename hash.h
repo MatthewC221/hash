@@ -22,8 +22,8 @@
 #define OPEN_ADDR 2
 
 #define INT_KEY_INT_VAL 1
-#define INT_KEY_STRING_VAL 2
-#define STR_KEY_STRING_VAL 3
+#define INT_KEY_STR_VAL 2
+#define STR_KEY_STR_VAL 3
 #define STR_KEY_INT_VAL 4
 
 // Pre-defined sizes for optimisations
@@ -84,8 +84,7 @@ typedef struct STR_k_INT_v
 typedef struct Hash
 {
 
-    // Open addressing and collision nodes
-    int_node ** K;   
+    // Open addressing and collision nodes  
     INT_k_INT_v ** int_k_int_v;   
     INT_k_STR_v ** int_k_str_v;
     STR_k_STR_v ** str_k_str_v;
@@ -105,18 +104,21 @@ typedef struct Hash
 
 // Function decl
 extern INT_k_INT_v * createINT_k_INT_v(int cur_key, int cur_value, int dist);
-extern INT_k_STR_v * createINT_k_STR_v(int cur_key, char *cur_value, int dist) 
+extern INT_k_STR_v * createINT_k_STR_v(int cur_key, char *cur_value, int dist);
 
-extern int_node * createNode(int cur_key, int cur_value);
 extern Hash * createHash(int elements, ...);
 
 extern void put (Hash * H, void *cur_key, void *cur_value);
 extern void put_INT_k_INT_v (Hash * H, int cur_key, int cur_value);
+extern void put_INT_k_STR_v (Hash * H, int cur_key, char * cur_value);
 
 extern int get(Hash * H, int key);
 extern void del(Hash * H, int key);
 extern void resize(Hash * H);
-extern void resize_OPEN(Hash * old_H);
+
+extern void resize_OPEN_INT_k_INT_v(Hash * old_H);
+extern void resize_OPEN_INT_k_STR_v(Hash * old_H);
+
 extern unsigned int overwriteKey(Hash * H, int key, int val, int gen_key);
 extern void set_lf (Hash * H, double new_load);
 
@@ -124,12 +126,7 @@ extern void free_hash(Hash * H);
 extern void printHash(Hash * H);
 extern double load_factor(Hash * H);
 
-extern void swap(INT_k_INT_v ** tmp1, INT_k_INT_v ** tmp2);
-
-// Currently unused
-extern Hash * copyHashCollision(Hash * H);
-extern INT_k_INT_v ** copyHashOpen(Hash * H);
-extern void swap_Hash(Hash ** tmp1, Hash ** tmp2);
-// Function decl
+extern void swap_INT_k_INT_v(INT_k_INT_v ** tmp1, INT_k_INT_v ** tmp2);
+extern void swap_INT_k_STR_v(INT_k_STR_v ** tmp1, INT_k_STR_v ** tmp2);
 
 #endif
