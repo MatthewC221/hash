@@ -152,7 +152,7 @@ void put_INT_k_INT_v (Hash * H, int cur_key, int cur_value)
 {
     int gen_key = cur_key;
     if (gen_key < 0) gen_key *= -1; 
-    if (H->cur_size <= gen_key) gen_key = (cur_key & (H->cur_size - 1));
+    if (H->cur_size < gen_key) gen_key = (cur_key & (H->cur_size - 1));
 
     // #### Collision put ####
     /*
@@ -231,7 +231,7 @@ void put_INT_k_STR_v (Hash * H, int cur_key, char * cur_value)
 {
     int gen_key = cur_key;
     if (gen_key < 0) gen_key *= -1; 
-    if (H->cur_size <= gen_key) gen_key = (cur_key & (H->cur_size - 1));
+    if (H->cur_size < gen_key) gen_key = (cur_key & (H->cur_size - 1));
 
         // Linear probing once around for a spot  
     INT_k_STR_v * new_node = createINT_k_STR_v(cur_key, cur_value, 0);
