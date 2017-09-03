@@ -12,19 +12,11 @@ $max = 1000000;
 
 printf("The first timing test to compare my C hash with G_HASH_TABLE.\n");
 printf("Running without checks\n");
-=pod
-printf("### Running timing tests for collision_speed.c COLLISION ###\n");
-for ($start = 10; $start <= $max; $start = $start * 10) {
-    my $start_time = time();
-    $tmp_string = "./collision_speed 1 $start 1";
-    system($tmp_string);
-    printf("Time elapsed for $start inserts:%.2f\n", time() - $start_time);
-    printf("------------\n");
-}
-=cut
+
+printf("LARGE HASH\n------------\n");
 
 printf("### Running timing tests for collision_speed.c OPEN_ADDR ###\n");
-for ($start = 10; $start <= $max; $start = $start * 10) {
+for ($start = 1000000; $start <= 5000000; $start = $start + 1000000) {
     my $start_time = time();
     $tmp_string = "./collision_speed 1 $start 2";
     system($tmp_string);
@@ -33,7 +25,7 @@ for ($start = 10; $start <= $max; $start = $start * 10) {
 }
 
 printf("### Running timing tests for G_HASH_TABLE ###\n");
-for ($start = 10; $start <= $max; $start = $start * 10) {
+for ($start = 1000000; $start <= 5000000; $start = $start + 1000000) {
     my $start_time = time();
     $tmp_string = "./test $start";
     system($tmp_string);

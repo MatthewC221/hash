@@ -65,3 +65,8 @@
 - Fixed my memory leak! Thanks to some good people on SO
 - Experimenting with power of 2 hash, much faster for collision hashing... did some research and seems to be the norm
 - SHOULD FOCUS on completing everything before focusing on speed. String keys, string values, etc!!!
+
+24/8/17 - 2/9/17
+- Now on par with C's glib hash. This is solid stuff, I did have to go back and fix a bug I made ages ago
+which really sucked
+- String keys are in (take much longer because of extra mallocs)

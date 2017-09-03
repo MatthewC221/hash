@@ -20,3 +20,6 @@ Things to learn
 - Highly optimised hash algorithms (to the very fine details)
 - Learn more about hashtable implementations (have never done open addr)
 - Learn about pytest for my upcoming internship and unit test extensively and try to incorporate professional practices
+
+Main files:
+	hash.h, hash.c
