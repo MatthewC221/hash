@@ -52,7 +52,7 @@ typedef struct INT_k_INT_v
 {
     int k;
     int v;
-    unsigned int distance;
+    int distance;
 
 } INT_k_INT_v;
 
@@ -90,15 +90,15 @@ typedef struct Hash
     STR_k_STR_v ** str_k_str_v;
     STR_k_INT_v ** str_k_int_v;
 
-    unsigned int cur_size;
-    unsigned int num_elem; 
-    unsigned int k_v_type;             
+    int cur_size;
+    int num_elem; 
+    int k_v_type;             
     // Size until next resize
-    unsigned int to_resize;     
+    int to_resize;     
     // Max probes until resize     
-    unsigned int probe_limit;
+    int probe_limit;
     double load_factor;     
-    unsigned int type;               
+    int type;               
 
 } Hash;
 

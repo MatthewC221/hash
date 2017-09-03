@@ -12,12 +12,12 @@ int main(int argc, char *argv[])
 		int size = atoi(argv[1]);
 		int inserts = atoi(argv[2]);
 		int type = atoi(argv[3]);
-		Hash * H = createHash(3, size, type, INT_KEY_INT_VAL);
+		Hash * H = createHash(2, size, type);
 
 		// Should be inserts * 3
 		int range = inserts * 3; 
 
-		// int * keys = malloc(sizeof(int) * inserts);
+		//int * keys = malloc(sizeof(int) * inserts);
 
 		int key = 1;
 		for (int i = 0; i < inserts; i++) {
@@ -29,13 +29,13 @@ int main(int argc, char *argv[])
 		/*
 		for (int i = 0; i < inserts; i++) {
 			if (1 != get(H, keys[i])) {
-				printHash(H);
+				printf("Failed on keys[i] = %d\n", keys[i]);
 				break;
 			}
 		}
 		*/
 		free_hash(H);
-		// free(keys);
+		//free(keys);
 
 	} else {
 		fprintf(stderr, "Usage ./collision_speed <size_of_hash> <num_elem> <type>\n");

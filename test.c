@@ -4,6 +4,10 @@
 #include <time.h>
 #include <assert.h>
 
+void key_destroyed(gpointer data) {
+	free(data);
+}
+
 int main(int argc, char *argv[]) 
 {
 
@@ -13,7 +17,7 @@ int main(int argc, char *argv[])
 	    srand(time(NULL));
 	    int size = atoi(argv[1]);
 
-		GHashTable *hash = g_hash_table_new_full (g_int_hash, g_int_equal, NULL, NULL);
+		GHashTable *hash = g_hash_table_new_full (g_int_hash, g_int_equal, (GDestroyNotify)key_destroyed, NULL);
 		int * keys = malloc(sizeof(int) * size);
 
 		for (int i = 0; i < size; i++) {
@@ -22,6 +26,7 @@ int main(int argc, char *argv[])
 			int *tmp = g_new0(gint, 1);
 			*tmp = r;
 			g_hash_table_insert(hash, tmp, GINT_TO_POINTER(1));
+			// free(tmp);
 		}
 
 		g_hash_table_destroy(hash);
