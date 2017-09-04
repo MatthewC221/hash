@@ -4,9 +4,7 @@
 #include <time.h>
 #include <assert.h>
 
-void key_destroyed(gpointer data) {
-	free(data);
-}
+void key_destroyed(gpointer data) { free(data); }
 
 int main(int argc, char *argv[]) 
 {
@@ -17,19 +15,33 @@ int main(int argc, char *argv[])
 	    srand(time(NULL));
 	    int size = atoi(argv[1]);
 
-		GHashTable *hash = g_hash_table_new_full (g_int_hash, g_int_equal, (GDestroyNotify)key_destroyed, NULL);
-		int * keys = malloc(sizeof(int) * size);
+	    int *key = NULL;
+	    int *val = NULL;
+		GHashTable *hash = g_hash_table_new_full (g_int_hash, g_int_equal, free, free);
+		//int * keys = malloc(sizeof(int) * size);
 
 		for (int i = 0; i < size; i++) {
 			int r = rand() % (size * 3);
-			keys[i] = r;
-			int *tmp = g_new0(gint, 1);
-			*tmp = r;
-			g_hash_table_insert(hash, tmp, GINT_TO_POINTER(1));
-			// free(tmp);
+		  	key = malloc( sizeof(*key) );
+		  	*key = r;
+		  	val = malloc( sizeof(*val) );
+		  	*val = 1;
+		  	g_hash_table_insert(hash, key, val);
 		}
 
+		/*
+		for (int i = 0; i < size; i++) {
+			printf("%d\n", keys[i]);
+			gpointer *p = g_hash_table_lookup(hash, GINT_TO_POINTER(keys[i]));
+			//int tmp = *(int *)p;
+			// printf("%d\n", tmp);
+			//int tmp = *((int *) p);
+			//printf("%d\n", tmp);
+		}
+		*/
+
 		g_hash_table_destroy(hash);
+		hash = NULL;
 	} else {
 		fprintf(stderr, "Usage ./test <size>\n");
 	}
