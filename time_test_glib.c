@@ -13,14 +13,18 @@ int main(int argc, char *argv[])
 	    srand(time(NULL));
 	    int size = atoi(argv[1]);
 
-		GHashTable *hash = g_hash_table_new_full (g_int_hash, g_int_equal, NULL, NULL);
-		int * keys = malloc(sizeof(int) * size);
+	    int *key = NULL;
+	    int *val = NULL;
+	    
+		GHashTable *hash = g_hash_table_new_full (g_int_hash, g_int_equal, free, free);
+		// int * keys = malloc(sizeof(int) * size);
 
 		for (int i = 0; i < size; i++) {
-			int *tmp = g_new0(gint, 1);
-			keys[i] = i;
-			*tmp = i;
-			g_hash_table_insert(hash, tmp, GINT_TO_POINTER(1));
+		  	key = malloc( sizeof(*key) );
+		  	*key = i;
+		  	val = malloc( sizeof(*val) );
+		  	*val = 1;
+		  	g_hash_table_insert(hash, key, val);
 		}
 
 		g_hash_table_destroy(hash);
