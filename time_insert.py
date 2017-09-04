@@ -31,8 +31,6 @@ if (len(sys.argv) == 4):
         for i in range(0, size):
             H.pop(i, None)
 
-    print ("Total items = " + str(len(H)))
-
 else:
     print "Usage ./resize_test <size> <check_flag> <delete_flag> "
 

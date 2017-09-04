@@ -32,6 +32,15 @@ for ($start = 10; $start <= $max; $start = $start * 10) {
     printf("------------\n");
 }
 
+printf("### Running timing tests for time_insert.c GLIB ###\n");
+for ($start = 10; $start <= $max; $start = $start * 10) {
+    my $start_time = time();
+    $tmp_string = "./time_test_glib $start >/dev/null 2>&1";
+    system($tmp_string);
+    printf("Time elapsed for $start inserts:%.2f\n", time() - $start_time);
+    printf("------------\n");
+}
+
 printf("### Running timing tests for time_insert.c OPEN_ADDR STRING VALS ###\n");
 for ($start = 10; $start <= $max; $start = $start * 10) {
     my $start_time = time();
