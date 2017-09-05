@@ -1,5 +1,5 @@
 #include <stdio.h>
-#include "hash.h"
+#include "../hash.h"
 #include <stdlib.h>
 #include <assert.h>
 #include <float.h>

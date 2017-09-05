@@ -27,7 +27,7 @@ for ($start = 1000000; $start <= 5000000; $start = $start + 1000000) {
 printf("### Running timing tests for G_HASH_TABLE ###\n");
 for ($start = 1000000; $start <= 5000000; $start = $start + 1000000) {
     my $start_time = time();
-    $tmp_string = "./test $start";
+    $tmp_string = "./glib_collision_speed $start";
     system($tmp_string);
     printf("Time elapsed for $start inserts:%.2f\n", time() - $start_time);
     printf("------------\n");

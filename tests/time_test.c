@@ -1,5 +1,5 @@
 #include <stdio.h>
-#include "hash.h"
+#include "../hash.h"
 #include <stdlib.h>
 #include <assert.h>
 #include <float.h>
@@ -7,8 +7,7 @@
 int main(int argc, char *argv[])
 {
     // Timing test for N elements
-    
-    // Default size = 17
+
     if (argc == 6) {
               
         double size = atoi(argv[1]);
