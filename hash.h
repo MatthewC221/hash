@@ -112,7 +112,10 @@ extern void put (Hash * H, void *cur_key, void *cur_value);
 extern void put_INT_k_INT_v (Hash * H, int cur_key, int cur_value);
 extern void put_INT_k_STR_v (Hash * H, int cur_key, char * cur_value);
 
-extern int get(Hash * H, int key);
+extern int get(Hash * H, void * key);
+extern int get_INT_k_INT_v(Hash * H, int key);
+extern int get_INT_k_STR_v(Hash * H, int key);
+
 extern void del(Hash * H, int key);
 extern void resize(Hash * H);
 

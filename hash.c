@@ -26,7 +26,7 @@ int resize_default[20] = {
 };
 */
 
-int powers[24] = {
+int powers[POW_SIZE] = {
     2, 4, 8, 16, 32,
     64, 128, 256, 512, 1024,
     2048, 4096, 8192, 16384, 32768,
@@ -34,7 +34,7 @@ int powers[24] = {
     2097152, 4194304, 8388608, 16777216
 };
 
-int log_prime[24] = {
+int log_prime[POW_SIZE] = {
     1, 2, 3, 4, 5,
     6, 7, 8, 9, 10,
     11, 12, 13, 14, 15,
@@ -51,7 +51,7 @@ int log_prime[24] = {
 };
 */
 
-int resize_default[24] = {
+int resize_default[POW_SIZE] = {
     1, 3, 6, 12, 24, 48, 
     96, 192, 384, 768, 1536, 
     3072, 6144, 12288, 24576, 49152, 
@@ -330,10 +330,12 @@ void resize_OPEN_INT_k_INT_v(Hash * old_H)
     //Hash * new_hash = createHash(3, 2 * old_H->cur_size, OPEN_ADDR, INT_KEY_INT_VAL);
 
     Hash * new_hash = (Hash *)malloc(SIZE_hash);
+
+    int saved = old_H->num_elem;
+
     new_hash->probe_limit = old_H->probe_limit + 1;     
     new_hash->type = old_H->type;                        // Collision / open addr
     new_hash->cur_size = old_H->cur_size * 2;
-    new_hash->num_elem = old_H->num_elem;
     new_hash->load_factor = DEFAULT_LF;           // Default load factor (change at 0.75 = N / size) 
     new_hash->to_resize = old_H->to_resize * 2;    
     new_hash->k_v_type = old_H->k_v_type;
@@ -350,6 +352,7 @@ void resize_OPEN_INT_k_INT_v(Hash * old_H)
     free(old_H->int_k_int_v);
     // printf("num elem = %d\n", new_H->num_elem);
     *old_H = *new_hash;
+    old_H->num_elem = saved;
     free(new_hash);
 }
 
@@ -462,11 +465,26 @@ void del(Hash * H, int key)
 }
 
 //** Get value from key
-int get(Hash * H, int key) 
+int get(Hash * H, void * key) 
 {
-    int gen_key = (key & (H->cur_size - 1));
+    switch (H->k_v_type) {
+        case 1:     // int key, int val
+        {
+            int k = *((int *) key);
+            return get_INT_k_INT_v(H, k);
+        }
+        case 2:     // int key, str value
+        {
+            int k = *((int *) key); 
+            return get_INT_k_STR_v(H, k); 
+        }
+    }
+}
 
-    int saved = gen_key;
+int get_INT_k_INT_v(Hash * H, int key)
+{
+
+    int gen_key = (key & (H->cur_size - 1));
     int dist_from_key = 0;
 
     while (1) {
@@ -482,6 +500,9 @@ int get(Hash * H, int key)
 
     return INT_MIN;
 }
+
+// TODO
+int get_INT_k_STR_v(Hash * H, int key) { return 0; }
 
 //** Creates a node for open addressing
 INT_k_INT_v * createINT_k_INT_v(int cur_key, int cur_value, int dist)
