@@ -1,25 +1,20 @@
 My hash library for C
+=====================
+Winter Break 2017
 
-One of my projects during Winter Break 2017
+Faster than Py dict and C glib's hash library
+Compatible for beginners to advanced programmers to use
 
-Initial goals (Priority):
+Main features
+=============
+	- Variety of key val combinations (int/string key, string/int val)
+	- Runs very fast for put, get and del
+	- Good diagnostic tools
 
-1. Highly optimised (matching performance of other libs and compare vs Python/Java)
-    - Performance measure based on time, accuracy, distribution of collision, etc.
-2. Allow for customisation
-    - Enable user to select open addr, collision chaining, type of key, load factor 
-3. Create diagnostic tools to allow analysis
-    - Can view current state of hashes, % of collisions, current load factor, longest chain, etc. 
-      in a meaningful way
-      
-My first competitor will be Python's dict
-      
-Things to learn
+DOCS
+====
+	- Will be created and uploaded soon
 
-- Variadic functions (allow for variable amount of args)
-- Highly optimised hash algorithms (to the very fine details)
-- Learn more about hashtable implementations (have never done open addr)
-- Learn about pytest for my upcoming internship and unit test extensively and try to incorporate professional practices
-
-Main files:
+Main files
+==========
 	hash.h, hash.c
