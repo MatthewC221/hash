@@ -17,25 +17,29 @@ int main(int argc, char *argv[])
 		// Should be inserts * 3
 		int range = inserts * 3; 
 
-		int * keys = malloc(sizeof(int) * inserts);
+		//int * keys = malloc(sizeof(int) * inserts);
+		//int * vals = malloc(sizeof(int) * inserts);
 
 		int key = 1;
 		for (int i = 0; i < inserts; i++) {
-			int r = rand() % range;
-			put(H, &r, &key);
-		//	keys[i] = r;
+			int k = rand() % range;
+			put(H, &k, &key);
+		//	keys[i] = k;
+		//	vals[i] = v;
 		}
 
 		/*
 		for (int i = 0; i < inserts; i++) {
-			if (1 != get(H, keys[i])) {
-				printf("Failed on keys[i] = %d\n", keys[i]);
+			if (1 != get(H, &keys[i])) {
+				printHash(H);
 				break;
 			}
 		}
 		*/
+
 		free_hash(H);
 		//free(keys);
+		//free(vals);
 
 	} else {
 		fprintf(stderr, "Usage ./collision_speed <size_of_hash> <num_elem> <type>\n");
