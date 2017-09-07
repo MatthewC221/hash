@@ -143,14 +143,14 @@ void put(Hash * H, void *cur_key, void *cur_value) {
     switch (H->k_v_type) {
         case 1:     // int key, int val
         {
-            int k = *((int *) cur_key);
-            int v = *((int *) cur_value);
+            int k = *((intptr_t *) cur_key);
+            int v = *((intptr_t *) cur_value);
             put_INT_k_INT_v(H, k, v);
             break;
         }
         case 2:     // int key, str value
         {
-            int k = *((int *) cur_key); 
+            int k = *((intptr_t *) cur_key); 
             char *v = *((char **) cur_value);
             put_INT_k_STR_v(H, k, v);
         }
