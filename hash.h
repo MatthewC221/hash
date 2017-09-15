@@ -9,6 +9,16 @@
 #include <stdarg.h>
 #include <assert.h>
 #include <string.h>
+#include <inttypes.h>
+#include <math.h>
+
+#ifdef NAN
+/* NAN is supported */
+#endif
+
+#ifdef INFINITY
+/* INF is supported */
+#endif
 
 // Colours for error and diagnostic prints
 #define RED  "\x1B[31m"            
@@ -52,7 +62,7 @@ typedef struct INT_k_INT_v
 {
     int k;
     int v;
-    unsigned int distance;
+    short distance;
 
 } INT_k_INT_v;
 
@@ -69,7 +79,7 @@ typedef struct STR_k_STR_v
 {
     char *k;
     char *v;
-    int distance;
+    short distance;
 
 } STR_k_STR_v;
 
@@ -77,7 +87,7 @@ typedef struct STR_k_INT_v
 {
     char *k;
     int v;
-    int distance;
+    short distance;
 
 } STR_k_INT_v;
 
@@ -125,7 +135,8 @@ extern void resize_OPEN_INT_k_STR_v(Hash * old_H);
 extern unsigned int overwriteKey(Hash * H, int key, int val, int gen_key);
 extern void set_lf (Hash * H, double new_load);
 
-extern void insert(Hash * H, int cur_key, int cur_value);
+extern void insert_int_int(Hash * H, int cur_key, int cur_value);
+extern void insert_int_str(Hash * H, int cur_key, char * cur_value);
 extern void free_hash(Hash * H);
 extern void printHash(Hash * H);
 extern double load_factor(Hash * H);

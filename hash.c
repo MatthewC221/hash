@@ -166,7 +166,7 @@ void put_INT_k_INT_v (Hash * H, int cur_key, int cur_value)
     INT_k_INT_v * new_node = createINT_k_INT_v(cur_key, cur_value, 0);
     while (1) {
         // Inserting new key
-        if (H->int_k_int_v[gen_key] == NULL || H->int_k_int_v[gen_key]->k == INT_MIN) {
+        if (H->int_k_int_v[gen_key] == NULL || H->int_k_int_v[gen_key]->distance == SHRT_MAX) {
             H->num_elem++;
             H->int_k_int_v[gen_key] = new_node;
             break;
@@ -207,16 +207,14 @@ void put_INT_k_INT_v (Hash * H, int cur_key, int cur_value)
 
 void put_INT_k_STR_v (Hash * H, int cur_key, char * cur_value) 
 {
-    int gen_key = cur_key;
-    if (gen_key < 0) gen_key *= -1; 
-    if (H->cur_size < gen_key) gen_key = (cur_key & (H->cur_size - 1));
+    int gen_key = (cur_key & (H->cur_size - 1));
 
         // Linear probing once around for a spot  
     INT_k_STR_v * new_node = createINT_k_STR_v(cur_key, cur_value, 0);
 
     while (1) {
         // Inserting new key
-        if (H->int_k_str_v[gen_key] == NULL || (H->int_k_str_v[gen_key]->k == INT_MIN)) {
+        if (H->int_k_str_v[gen_key] == NULL || H->int_k_int_v[gen_key]->distance == SHRT_MAX) {
             H->num_elem++;
             H->int_k_str_v[gen_key] = new_node;
             break;
@@ -232,10 +230,7 @@ void put_INT_k_STR_v (Hash * H, int cur_key, char * cur_value)
         // now that the new key is inserted       
         if (H->int_k_str_v[gen_key]->distance < new_node->distance) {
             swap_INT_k_STR_v(&H->int_k_str_v[gen_key], &new_node);
-
-            gen_key = cur_key;
-            if (gen_key < 0) gen_key *= -1;
-            gen_key = (gen_key & (H->cur_size - 1));
+            gen_key = (cur_key & (H->cur_size - 1));
             // Don't increment distance until next check
             new_node->distance--;
         }
@@ -246,9 +241,8 @@ void put_INT_k_STR_v (Hash * H, int cur_key, char * cur_value)
         // If we reach the probe limit, resize the hash     
         if (new_node->distance >= H->probe_limit) {
             resize_OPEN_INT_k_STR_v(H);
-            gen_key = new_node->k;
-            if (gen_key < 0) gen_key *= -1; 
-            gen_key = (gen_key & (H->cur_size - 1));
+            gen_key = (new_node->k & (H->cur_size - 1));
+            new_node->distance = 0;
         }
     }
 
@@ -344,7 +338,7 @@ void resize_OPEN_INT_k_INT_v(Hash * old_H)
 
     for (int i = 0; i < old_H->cur_size; i++) {
         if (old_H->int_k_int_v[i] && old_H->int_k_int_v[i]->k != INT_MIN) {
-            insert(new_hash, old_H->int_k_int_v[i]->k, old_H->int_k_int_v[i]->v);
+            insert_int_int(new_hash, old_H->int_k_int_v[i]->k, old_H->int_k_int_v[i]->v);
             free(old_H->int_k_int_v[i]);
         }
     }
@@ -375,7 +369,7 @@ void resize_OPEN_INT_k_STR_v(Hash * old_H)
     free(new_H);
 }
 
-void insert(Hash * H, int cur_key, int cur_value) 
+void insert_int_int(Hash * H, int cur_key, int cur_value) 
 {
     int gen_key = (cur_key & (H->cur_size - 1));
     // Linear probing once around for a spot  
@@ -386,11 +380,8 @@ void insert(Hash * H, int cur_key, int cur_value)
             H->num_elem++;
             H->int_k_int_v[gen_key] = new_node;
             break;
-        // Overwriting key
         } 
         // Robin hood hash
-        // If the distance of the current key has probed less, swap_INT_k_INT_v and insert the curr key
-
         if (H->int_k_int_v[gen_key]->distance < new_node->distance) {
             swap_INT_k_INT_v(&H->int_k_int_v[gen_key], &new_node);
             gen_key = (cur_key & (H->cur_size - 1));
@@ -404,6 +395,33 @@ void insert(Hash * H, int cur_key, int cur_value)
     }
 }
 
+/*
+void insert_int_str(Hash * H, int cur_key, char * cur_value) 
+{
+    int gen_key = (cur_key & (H->cur_size - 1));
+    // Linear probing once around for a spot  
+    INT_k_INT_v * new_node = createINT_k_STR_v(cur_key, cur_value, 0);
+    while (1) {
+        // Inserting new key
+        if (H->int_k_int_v[gen_key] == NULL || H->int_k_int_v[gen_key]->k == INT_MIN) {
+            H->num_elem++;
+            H->int_k_int_v[gen_key] = new_node;
+            break;
+        } 
+        // Robin hood hash
+        if (H->int_k_int_v[gen_key]->distance < new_node->distance) {
+            swap_INT_k_INT_v(&H->int_k_int_v[gen_key], &new_node);
+            gen_key = (cur_key & (H->cur_size - 1));
+            new_node->distance--;
+        }
+
+        gen_key++;
+        new_node->distance++;  
+
+        if (gen_key >= H->cur_size) gen_key = 0;
+    }
+}
+*/
 //** Returns the current load factor
 double load_factor(Hash * H) 
 {
@@ -450,8 +468,7 @@ void del(Hash * H, int key)
     while (1) {
         // Can't free the node, just set it to a marker (INT_MIN)
         if (H->int_k_int_v[gen_key] && H->int_k_int_v[gen_key]->k == key) {
-            H->int_k_int_v[gen_key]->k = INT_MIN;
-            H->int_k_int_v[gen_key]->v = INT_MIN;
+            H->int_k_int_v[gen_key]->distance = SHRT_MAX;         // Distance MAX_INT (this is not possible)
             break;
         }
         gen_key++;
