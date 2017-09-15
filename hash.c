@@ -1,6 +1,9 @@
-
+#include <stdarg.h>
+#include <string.h>
 #include "hash.h"
-
+#include <stdio.h>
+#include <stdlib.h>
+#include <stdbool.h>
 // Precomputed hash sizes
 
 /*
@@ -67,7 +70,19 @@ void set_lf (Hash * H, double new_load)
     }
 }
 
-//** Creates the hash
+/*
+ * Function: createHash()
+ * ----------------------
+ *   Creates a hash object and returns it
+ *
+ *   elements: number of arguments (not including elements)
+ *   optional first_arg: starting_size (rounded to power of 2)
+ *   optional second_arg: type (OPEN_ADDR / COLLISION)
+ *   optional third_arg: key val type (defaults to INT_KEY_INT_VAL)
+ *
+ *   returns: pointer to hash object
+ */
+
 Hash * createHash(int elements, ...) 
 {
     va_list arg_list;
@@ -137,7 +152,18 @@ Hash * createHash(int elements, ...)
     return new_hash;
 }
 
-//** Insert element in hash
+/*
+ * Function: put()
+ * ---------------
+ *   Adds a key, value pair to the hash (calls the specific function)
+ *
+ *   H: the hash object to add the kv pair to
+ *   cur_key: the address of a key
+ *   cur_value: the address of a value
+ *
+ *   returns: void
+ */
+
 void put(Hash * H, void *cur_key, void *cur_value) {
 
     switch (H->k_v_type) {
@@ -157,7 +183,18 @@ void put(Hash * H, void *cur_key, void *cur_value) {
     }
 }
 
-// Putting int key and int val in
+/*
+ * Function: put_INT_k_INT_v()
+ * ---------------------------
+ *   Adds an int key, int value pair to the hash
+ *
+ *   H: the hash object to add the kv pair to
+ *   cur_key: the address of the int key
+ *   cur_value: the address of the int value
+ *
+ *   returns: void
+ */
+
 void put_INT_k_INT_v (Hash * H, int cur_key, int cur_value) 
 {
     int gen_key = (cur_key & (H->cur_size - 1));
@@ -166,7 +203,9 @@ void put_INT_k_INT_v (Hash * H, int cur_key, int cur_value)
     INT_k_INT_v * new_node = createINT_k_INT_v(cur_key, cur_value, 0);
     while (1) {
         // Inserting new key
-        if (H->int_k_int_v[gen_key] == NULL || H->int_k_int_v[gen_key]->distance == SHRT_MAX) {
+        if (H->int_k_int_v[gen_key] == NULL || 
+            H->int_k_int_v[gen_key]->distance == SHRT_MAX) {
+
             H->num_elem++;
             H->int_k_int_v[gen_key] = new_node;
             break;
@@ -205,6 +244,18 @@ void put_INT_k_INT_v (Hash * H, int cur_key, int cur_value)
     return;
 }
 
+/*
+ * Function: put_INT_k_STR_v()
+ * ---------------------------
+ *   Adds an int key, str value pair to the hash
+ *
+ *   H: the hash object to add the kv pair to
+ *   cur_key: the address of the int key
+ *   cur_value: the address of the str value
+ *
+ *   returns: void
+ */
+
 void put_INT_k_STR_v (Hash * H, int cur_key, char * cur_value) 
 {
     int gen_key = (cur_key & (H->cur_size - 1));
@@ -214,7 +265,9 @@ void put_INT_k_STR_v (Hash * H, int cur_key, char * cur_value)
 
     while (1) {
         // Inserting new key
-        if (H->int_k_str_v[gen_key] == NULL || H->int_k_int_v[gen_key]->distance == SHRT_MAX) {
+        if (H->int_k_str_v[gen_key] == NULL || 
+            H->int_k_int_v[gen_key]->distance == SHRT_MAX) {
+
             H->num_elem++;
             H->int_k_str_v[gen_key] = new_node;
             break;
@@ -251,7 +304,17 @@ void put_INT_k_STR_v (Hash * H, int cur_key, char * cur_value)
     return;
 }
 
-//** swap_INT_k_INT_v two nodes
+/*
+ * Function: swap_INT_k_INT_v()
+ * ----------------------------
+ *   Swaps two pointers to int key, int value nodes
+ *
+ *   tmp1: first node
+ *   tmp2: second node
+ *
+ *   returns: void
+ */
+
 void swap_INT_k_INT_v(INT_k_INT_v ** tmp1, INT_k_INT_v ** tmp2) 
 {
     INT_k_INT_v * tmp = *tmp1; 
@@ -266,7 +329,11 @@ void swap_INT_k_STR_v(INT_k_STR_v ** tmp1, INT_k_STR_v ** tmp2)
     *tmp2 = tmp;
 }
 
-//** Attempts an overwrite, if no key present return 0
+/*
+ * Function: UNUSED
+ * ----------------
+ */
+
 unsigned int overwriteKey(Hash * H, int key, int val, int gen_key)
 {
 
@@ -287,7 +354,15 @@ unsigned int overwriteKey(Hash * H, int key, int val, int gen_key)
     return 0;
 }
 
-//** Prints all indexes and elements of the hash
+/*
+ * Function: printHash()
+ * ---------------------
+ *   Prints the complete hash including key values and distances
+ *
+ *   H: hash to print
+ *
+ *   returns: void
+ */
 void printHash (Hash * H) 
 {
 
@@ -298,7 +373,8 @@ void printHash (Hash * H)
             for (int i = 0; i < H->cur_size; i++) {
                 printf("[%s%d%s] : ", YELLOW, i, END);
                 if (H->int_k_int_v[i] && H->int_k_int_v[i]->k != INT_MIN) {
-                    printf("(%d:%d) d=%d\n", H->int_k_int_v[i]->k, H->int_k_int_v[i]->v, H->int_k_int_v[i]->distance);
+                    printf("(%d:%d) d=%d\n", H->int_k_int_v[i]->k, H->int_k_int_v[i]->v,
+                     H->int_k_int_v[i]->distance);
                 } else {
                     printf("\n");
                 } 
@@ -308,7 +384,8 @@ void printHash (Hash * H)
             for (int i = 0; i < H->cur_size; i++) {
                 printf("[%s%d%s] : ", YELLOW, i, END);
                 if (H->int_k_str_v[i] && H->int_k_str_v[i]->k != INT_MIN) {
-                    printf("(%d:%s) d=%d\n", H->int_k_str_v[i]->k, H->int_k_str_v[i]->v, H->int_k_str_v[i]->distance);
+                    printf("(%d:%s) d=%d\n", H->int_k_str_v[i]->k, H->int_k_str_v[i]->v,
+                     H->int_k_str_v[i]->distance);
                 } else {
                     printf("\n");
                 } 
@@ -318,13 +395,19 @@ void printHash (Hash * H)
 }
 
 
-//** Resizing for open addressing hash
+/*
+ * Function: resize_OPEN_INT_k_INT_v()
+ * -----------------------------------
+ *   Enlarges the hash by a power of 2, called automatically
+ *
+ *   old_H: pointer to the old hash
+ *
+ *   returns: void
+ */
 void resize_OPEN_INT_k_INT_v(Hash * old_H)
 {
-    //Hash * new_hash = createHash(3, 2 * old_H->cur_size, OPEN_ADDR, INT_KEY_INT_VAL);
 
     Hash * new_hash = (Hash *)malloc(SIZE_hash);
-
     int saved = old_H->num_elem;
 
     new_hash->probe_limit = old_H->probe_limit + 1;     
@@ -369,6 +452,17 @@ void resize_OPEN_INT_k_STR_v(Hash * old_H)
     free(new_H);
 }
 
+/*
+ * Function: insert_int_int()
+ * --------------------------
+ *   Faster version of put (we don't need to check for deleted nodes)
+ *
+ *   H: hash to insert element
+ *   cur_key: current int key to insert
+ *   cur_value: current int value to insert
+ *
+ *   returns: void
+ */
 void insert_int_int(Hash * H, int cur_key, int cur_value) 
 {
     int gen_key = (cur_key & (H->cur_size - 1));
@@ -376,7 +470,7 @@ void insert_int_int(Hash * H, int cur_key, int cur_value)
     INT_k_INT_v * new_node = createINT_k_INT_v(cur_key, cur_value, 0);
     while (1) {
         // Inserting new key
-        if (H->int_k_int_v[gen_key] == NULL || H->int_k_int_v[gen_key]->k == INT_MIN) {
+        if (H->int_k_int_v[gen_key] == NULL) {
             H->num_elem++;
             H->int_k_int_v[gen_key] = new_node;
             break;
@@ -422,7 +516,11 @@ void insert_int_str(Hash * H, int cur_key, char * cur_value)
     }
 }
 */
-//** Returns the current load factor
+
+/*
+ * Function: UNUSED
+ * ----------------
+ */
 double load_factor(Hash * H) 
 {
     printf("Nodes / size = %d / %d\n", H->num_elem, H->cur_size);
@@ -431,7 +529,15 @@ double load_factor(Hash * H)
 }
 
 
-//** Frees entire hash
+/*
+ * Function: free_hash()
+ * ---------------------
+ *   Frees the hash object (completely)
+ *
+ *   H: hash to free
+ *
+ *   returns: void
+ */
 void free_hash (Hash * H) 
 {
     switch (H->k_v_type) {
@@ -459,7 +565,16 @@ void free_hash (Hash * H)
 }
 
 
-//** Frees a node, if that node doesn't exist print err
+/*
+ * Function: del()
+ * ---------------
+ *   Delete a key from a hash (set distance=SHRT_MAX), will free later
+ *
+ *   H: hash to delete from
+ *   key: key to delete
+ *
+ *   returns: void
+ */
 void del(Hash * H, int key) 
 {
     int gen_key = (key & (H->cur_size - 1));
@@ -481,7 +596,16 @@ void del(Hash * H, int key)
     }        
 }
 
-//** Get value from key
+/*
+ * Function: get()
+ * ---------------
+ *   Returns a value for the corresponding key, calls specific func
+ *
+ *   H: hash to retrieve from
+ *   key: key to retrieve
+ *
+ *   returns: void* (EVENTUALLY)
+ */
 int get(Hash * H, void * key) 
 {
     switch (H->k_v_type) {
@@ -498,6 +622,16 @@ int get(Hash * H, void * key)
     }
 }
 
+/*
+ * Function: get_INT_k_INT_v()
+ * ---------------------------
+ *   Specific return function for int keys int vals
+ *
+ *   H: hash to retrieve from
+ *   key: key to retrieve
+ *
+ *   returns: the corresponding value
+ */
 int get_INT_k_INT_v(Hash * H, int key)
 {
 
