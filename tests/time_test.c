@@ -32,7 +32,7 @@ int main(int argc, char *argv[])
         }
         if (check_flag) {
             for (int i = 0; i < size; i++) {
-                assert(1 == get(H, i));
+                assert(1 == get(H, &i));
             }
         }
 

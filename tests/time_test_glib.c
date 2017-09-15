@@ -22,26 +22,20 @@ int main(int argc, char *argv[])
 		// int * keys = malloc(sizeof(int) * size);
 
 		for (int i = 0; i < size; i++) {
-			/*
 		  	key = malloc( sizeof(*key) );
 		  	*key = i;
-		  	val = malloc( sizeof(*val) );
-		  	*val = 1;
-			*/
-		  	k_one = g_new(gint, 1);
-		  	*k_one = i;
 		  	g_hash_table_insert(hash, key, GINT_TO_POINTER(1));
 		}
 
-		/*
+		
 		for (int i = 0; i < size; i++) {
 			key = malloc(sizeof(*key));
 			*key = i;
 			gpointer *p = g_hash_table_lookup(hash, key);
-			assert (GPOINTER_TO_INT(p) == i);
+			assert (GPOINTER_TO_INT(p) == 1);
 			free(key);
 		}	
-		*/
+		
 		g_hash_table_destroy(hash);
 	} else {
 		fprintf(stderr, "Usage ./test <size>\n");
