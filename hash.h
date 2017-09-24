@@ -1,14 +1,8 @@
 #ifndef _hash_h
 #define _hash_h
-
-#include <stdio.h>
-#include <stdlib.h>
-#include <stdbool.h>
+#include <assert.h>
 #include <math.h>
 #include <limits.h>
-#include <stdarg.h>
-#include <assert.h>
-#include <string.h>
 #include <inttypes.h>
 #include <math.h>
 
@@ -122,11 +116,12 @@ extern void put (Hash * H, void *cur_key, void *cur_value);
 extern void put_INT_k_INT_v (Hash * H, int cur_key, int cur_value);
 extern void put_INT_k_STR_v (Hash * H, int cur_key, char * cur_value);
 
-extern int get(Hash * H, void * key);
 extern int get_INT_k_INT_v(Hash * H, int key);
-extern int get_INT_k_STR_v(Hash * H, int key);
+extern char * get_INT_k_STR_v(Hash * H, int key);
 
 extern void del(Hash * H, int key);
+extern void del_INT_k_INT_v(Hash * H, int key);
+extern void del_INT_k_STR_v(Hash * H, int key);
 extern void resize(Hash * H);
 
 extern void resize_OPEN_INT_k_INT_v(Hash * old_H);

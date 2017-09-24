@@ -234,7 +234,7 @@ void put_INT_k_STR_v (Hash * H, int cur_key, char * cur_value)
             break;
         // Overwriting key
         } else if (H->int_k_str_v[gen_key]->k == new_node->k || 
-            H->int_k_int_v[gen_key]->distance == SHRT_MAX) {
+            H->int_k_str_v[gen_key]->distance == SHRT_MAX) {
 
             swap_INT_k_STR_v(&H->int_k_str_v[gen_key], &new_node);
             free(new_node->v);
@@ -395,7 +395,6 @@ void resize_OPEN_INT_k_INT_v(Hash * old_H)
 
 void resize_OPEN_INT_k_STR_v(Hash * old_H)
 {
-
     Hash * new_hash = (Hash *)malloc(SIZE_hash);
     int saved = old_H->num_elem;
 
