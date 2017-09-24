@@ -5,9 +5,9 @@ Faster than Py dict and C glib's hash library
 Compatible for beginners to advanced programmers to use
 
 #### Main features
-	Variety of key val combinations (int/string key, string/int val)
-	Runs very fast for put, get and del
-	Good diagnostic tools
+- Variety of key val combinations (int/string key, string/int val)
+- Runs very fast for put, get and del
+- Good diagnostic tools
 
 #### How to install
 	git clone git://github.com/MatthewC221/hash.git
@@ -24,7 +24,7 @@ This will put hash.h, hash.c in the typical libraries folder which is
 #### Quick tutorial
 	
 	#include <hash.h>
-	
+
 	int main() {
 		Hash * H = createHash();	// Defaults to int keys and int values and size 8
 		int key = 5;
@@ -36,7 +36,7 @@ This will put hash.h, hash.c in the typical libraries folder which is
 	}
 
 #### DOCS
-	Will be created and uploaded soon
+- Will be created and uploaded soon
 
 #### Main files
 	hash.h, hash.c
