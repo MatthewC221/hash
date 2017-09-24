@@ -1,8 +1,8 @@
 ### My hash library for C
 ##### Winter Break 2017
 
-Faster than Py dict and C glib's hash library
-Compatible for beginners to advanced programmers to use
+- Faster than Py dict and C glib's hash library
+- Compatible for beginners to advanced programmers to use
 
 #### Main features
 - Variety of key val combinations (int/string key, string/int val)
