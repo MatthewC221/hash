@@ -4,7 +4,7 @@
 
 int main(int argc, char *argv[])
 {
-    Hash * H = createHash(2, 16, INT_KEY_INT_VAL);      // Creates size 16 of int key, int val
+    Hash * H = createHash(3, 16, OPEN_ADDR, INT_KEY_INT_VAL);      // Creates size 16 of int key, int val
 
     int key = 1023;
     int val = 4;

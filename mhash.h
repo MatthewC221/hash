@@ -304,7 +304,7 @@ void put_INT_k_INT_v (Hash * H, int cur_key, int cur_value)
 {
     int gen_key = (cur_key & (H->cur_size - 1));
 
-    // Linear probing once around for a spot  
+    // Linear probing once around for a spot  													// navigate this RN
     INT_k_INT_v * new_node = createINT_k_INT_v(cur_key, cur_value, 0);
     while (1) {
         // Inserting new key
