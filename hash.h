@@ -87,8 +87,7 @@ typedef struct STR_k_INT_v
 
 typedef struct Hash
 {
-
-    // Open addressing and collision nodes  
+    // Different key, value types 
     INT_k_INT_v ** int_k_int_v;   
     INT_k_STR_v ** int_k_str_v;
     STR_k_STR_v ** str_k_str_v;
