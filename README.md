@@ -15,15 +15,15 @@
 	./config.sh 
 	*Enter password*
 
-This will put hash.h, hash.c in the typical libraries folder which is 
+This will put mhash.h in the typical libraries folder which is 
 /usr/include/X
 
 #### Compiling
-	gcc -o X X.c -I/usr/include hash.c
+	gcc -o X X.c 
 
 #### Quick tutorial
 	
-	#include <hash.h>
+	#include <mhash.h>
 
 	int main() {
 		Hash * H = createHash();	// Defaults to int keys and int values and size 8
@@ -39,4 +39,4 @@ This will put hash.h, hash.c in the typical libraries folder which is
 - Will be created and uploaded soon
 
 #### Main files
-	hash.h, hash.c
+	hash.h, hash.c, combined as mhash.h
